@@ -7,7 +7,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { Plus, List, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -37,6 +37,9 @@ import {
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import TaskList from '@/components/tasks/TaskList';
+import TaskForm from '@/components/tasks/TaskForm';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const projectSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
@@ -51,7 +54,10 @@ const Projects = () => {
   const [projects, setProjects] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
+  const [projectDialogOpen, setProjectDialogOpen] = useState(false);
+  const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<string | null>(null);
 
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectSchema),
@@ -87,7 +93,7 @@ const Projects = () => {
     }
   };
 
-  const onSubmit = async (values: ProjectFormValues) => {
+  const onSubmitProject = async (values: ProjectFormValues) => {
     if (!user) return;
     
     setIsCreating(true);
@@ -107,12 +113,41 @@ const Projects = () => {
       setProjects([...(data || []), ...projects]);
       toast.success('Project created successfully');
       form.reset();
-      setDialogOpen(false);
+      setProjectDialogOpen(false);
     } catch (error: any) {
       console.error('Error creating project:', error);
       toast.error(error.message || 'Failed to create project');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const onSubmitTask = async (values: any) => {
+    if (!user || !selectedProject) return;
+    
+    setIsCreatingTask(true);
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          title: values.title,
+          description: values.description || null,
+          deadline: values.deadline || null,
+          notes: values.notes || null,
+          project_id: selectedProject,
+          created_by: user.id,
+        })
+        .select();
+      
+      if (error) throw error;
+      
+      toast.success('Task created successfully');
+      setTaskDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error creating task:', error);
+      toast.error(error.message || 'Failed to create task');
+    } finally {
+      setIsCreatingTask(false);
     }
   };
 
@@ -128,6 +163,11 @@ const Projects = () => {
       if (error) throw error;
       
       setProjects(projects.filter(project => project.project_id !== projectId));
+      
+      if (selectedProject === projectId) {
+        setSelectedProject(null);
+      }
+      
       toast.success('Project deleted successfully');
     } catch (error: any) {
       console.error('Error deleting project:', error);
@@ -144,13 +184,21 @@ const Projects = () => {
     }
   };
 
+  const handleProjectClick = (projectId: string) => {
+    setSelectedProject(projectId === selectedProject ? null : projectId);
+  };
+
+  const getProjectById = (projectId: string) => {
+    return projects.find(project => project.project_id === projectId);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Projects</h1>
           
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
             <DialogTrigger asChild>
               <Button className="bg-collabCorner-purple">
                 <Plus className="mr-2 h-4 w-4" /> New Project
@@ -165,7 +213,7 @@ const Projects = () => {
               </DialogHeader>
               
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={form.handleSubmit(onSubmitProject)} className="space-y-4">
                   <FormField
                     control={form.control}
                     name="title"
@@ -223,59 +271,144 @@ const Projects = () => {
           </Dialog>
         </div>
 
-        {isLoading ? (
-          <div className="text-center py-8">Loading projects...</div>
-        ) : projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <Card key={project.project_id}>
-                <CardHeader>
-                  <CardTitle>{project.title}</CardTitle>
-                  <CardDescription>
-                    Created {format(new Date(project.created_at), 'MMM d, yyyy')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground line-clamp-3">
-                    {project.description || 'No description provided'}
-                  </p>
-                  <div className="mt-4 text-sm">
-                    <span className="font-medium">Deadline: </span>
-                    <span className="text-muted-foreground">
-                      {formatDate(project.deadline)}
-                    </span>
-                  </div>
-                </CardContent>
-                <CardFooter className="flex justify-between">
-                  <Button variant="outline" size="sm">
-                    Edit
-                  </Button>
-                  <Button 
-                    variant="destructive" 
-                    size="sm" 
-                    onClick={() => deleteProject(project.project_id)}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Projects List - Left Column */}
+          <div className="lg:col-span-1 space-y-4">
+            <h2 className="text-lg font-semibold mb-2">Your Projects</h2>
+            
+            {isLoading ? (
+              <div className="text-center py-8">Loading projects...</div>
+            ) : projects.length > 0 ? (
+              <div className="space-y-2">
+                {projects.map((project) => (
+                  <Card 
+                    key={project.project_id} 
+                    className={`cursor-pointer transition-all hover:border-collabCorner-purple 
+                              ${selectedProject === project.project_id ? 'border-collabCorner-purple shadow-md' : ''}`}
+                    onClick={() => handleProjectClick(project.project_id)}
                   >
-                    Delete
-                  </Button>
-                </CardFooter>
+                    <CardHeader className="p-4 pb-2">
+                      <CardTitle className="text-base">{project.title}</CardTitle>
+                    </CardHeader>
+                    <CardFooter className="p-2 pt-0 flex justify-between">
+                      <CardDescription className="text-xs">
+                        {formatDate(project.deadline)}
+                      </CardDescription>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteProject(project.project_id);
+                        }}
+                        className="h-6 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                      >
+                        Delete
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    No projects yet. Click "New Project" to get started.
+                  </p>
+                </CardContent>
               </Card>
-            ))}
+            )}
           </div>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle>No Projects Found</CardTitle>
-              <CardDescription>
-                You haven't created any projects yet
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-center py-8 text-muted-foreground">
-                Click the "New Project" button to get started
-              </p>
-            </CardContent>
-          </Card>
-        )}
+          
+          {/* Project Details & Tasks - Right Column */}
+          <div className="lg:col-span-3">
+            {selectedProject ? (
+              <>
+                <div className="mb-4">
+                  <Card>
+                    <CardHeader>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle>{getProjectById(selectedProject)?.title}</CardTitle>
+                          <CardDescription>
+                            Created {format(new Date(getProjectById(selectedProject)?.created_at), 'MMM d, yyyy')}
+                          </CardDescription>
+                        </div>
+                        
+                        <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm">
+                              <Plus className="mr-2 h-4 w-4" /> Add Task
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[525px]">
+                            <DialogHeader>
+                              <DialogTitle>Create New Task</DialogTitle>
+                              <DialogDescription>
+                                Add details for your new task
+                              </DialogDescription>
+                            </DialogHeader>
+                            
+                            <TaskForm 
+                              projectId={selectedProject}
+                              onSubmit={onSubmitTask}
+                              isSubmitting={isCreatingTask}
+                            />
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm">
+                        {getProjectById(selectedProject)?.description || 'No description provided'}
+                      </p>
+                      {getProjectById(selectedProject)?.deadline && (
+                        <div className="mt-4 text-sm">
+                          <span className="font-medium">Deadline: </span>
+                          <span className="text-muted-foreground">
+                            {formatDate(getProjectById(selectedProject)?.deadline)}
+                          </span>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+                
+                <div>
+                  <Tabs defaultValue="tasks">
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="tasks">
+                        <List className="h-4 w-4 mr-2" />
+                        Tasks
+                      </TabsTrigger>
+                      <TabsTrigger value="completed">
+                        <CheckSquare className="h-4 w-4 mr-2" />
+                        Completed
+                      </TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="tasks">
+                      <TaskList projectId={selectedProject} />
+                    </TabsContent>
+                    <TabsContent value="completed">
+                      <p className="text-center py-4 text-muted-foreground">
+                        Completed tasks will be shown here
+                      </p>
+                    </TabsContent>
+                  </Tabs>
+                </div>
+              </>
+            ) : (
+              <Card>
+                <CardContent className="text-center py-16">
+                  <p className="text-muted-foreground">
+                    Select a project to see details and manage tasks
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </div>
       </div>
     </DashboardLayout>
   );
