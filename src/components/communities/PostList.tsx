@@ -10,15 +10,17 @@ import { ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
 import PostComments from './PostComments';
 import { Skeleton } from '@/components/ui/skeleton';
 
+interface PostProfile {
+  full_name: string | null;
+}
+
 interface Post {
   post_id: string;
   title: string;
   content: string;
   created_at: string;
   author_id: string;
-  profiles?: {
-    full_name: string | null;
-  } | null;
+  profiles?: PostProfile | null;
   community_id?: string;
 }
 
@@ -36,18 +38,18 @@ interface PostListProps {
 // Interfaces for Supabase real-time payloads
 interface RealtimePostPayload {
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-  new: Post | Record<string, any>;
-  old: Post | Record<string, any>;
+  new: Post;
+  old: Post;
 }
 
 interface RealtimeReactionPayload {
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
   new: {
-    post_id?: string;
+    post_id: string;
     [key: string]: any;
   };
   old: {
-    post_id?: string;
+    post_id: string;
     [key: string]: any;
   };
 }
@@ -79,7 +81,7 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
           
           if (typedPayload.eventType === 'INSERT' && typedPayload.new) {
             // Add new post to the list
-            const newPost = typedPayload.new as Post;
+            const newPost = typedPayload.new;
             setPosts(prevPosts => [newPost, ...prevPosts]);
             
             // Initialize reactions for the new post
@@ -89,7 +91,7 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
             }));
           } else if (typedPayload.eventType === 'UPDATE' && typedPayload.new) {
             // Update existing post
-            const updatedPost = typedPayload.new as Post;
+            const updatedPost = typedPayload.new;
             setPosts(prevPosts => 
               prevPosts.map(post => 
                 post.post_id === updatedPost.post_id ? updatedPost : post
@@ -97,7 +99,7 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
             );
           } else if (typedPayload.eventType === 'DELETE' && typedPayload.old) {
             // Remove deleted post
-            const deletedPostId = (typedPayload.old as Post).post_id;
+            const deletedPostId = typedPayload.old.post_id;
             setPosts(prevPosts => 
               prevPosts.filter(post => post.post_id !== deletedPostId)
             );
@@ -172,18 +174,22 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
       console.log('Posts data received:', data);
       
       // Make sure we handle possible profile errors by providing a default
-      const safeData = (data || []).map(post => ({
-        ...post,
-        profiles: post.profiles && typeof post.profiles === 'object' && !('error' in post.profiles)
-          ? post.profiles
-          : { full_name: null }
-      })) as Post[];
+      // and transforming the response to match our Post interface
+      const safeData = (data || []).map(post => {
+        // Check if profiles exists and has error property (indicating a query error)
+        const hasProfileError = post.profiles && typeof post.profiles === 'object' && 'error' in post.profiles;
+        
+        return {
+          ...post,
+          profiles: hasProfileError ? { full_name: null } : post.profiles
+        };
+      }) as Post[];
       
       setPosts(safeData);
       
       // Get reactions counts for each post
-      if (data && data.length > 0) {
-        await fetchReactionsForPosts(data.map(post => post.post_id));
+      if (safeData && safeData.length > 0) {
+        await fetchReactionsForPosts(safeData.map(post => post.post_id));
       }
     } catch (error: any) {
       console.error('Error fetching posts:', error);
