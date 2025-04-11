@@ -41,17 +41,26 @@ const CreatePost: React.FC<CreatePostProps> = ({ communityId, onSuccess, onCance
     
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
+      console.log('Creating new post in community:', communityId);
+      const { data, error } = await supabase
         .from('posts')
         .insert({
           community_id: communityId,
           author_id: user.id,
           title: title.trim(),
           content: content.trim()
-        });
+        })
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
+      console.log('Post created successfully:', data);
+      toast.success('Post created successfully');
+      setTitle('');
+      setContent('');
       onSuccess();
     } catch (error: any) {
       console.error('Error creating post:', error);

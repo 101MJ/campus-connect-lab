@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
 import PostComments from './PostComments';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface PostListProps {
   communityId: string;
@@ -23,11 +24,87 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
 
   useEffect(() => {
     fetchPosts();
+
+    // Enable real-time updates for posts
+    const channel = supabase
+      .channel('posts-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen for all events (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'posts',
+          filter: `community_id=eq.${communityId}`
+        },
+        (payload) => {
+          console.log('Real-time post update:', payload);
+          if (payload.eventType === 'INSERT') {
+            // Add new post to the list
+            const newPost = payload.new;
+            setPosts(prevPosts => [newPost, ...prevPosts]);
+            
+            // Initialize reactions for the new post
+            setReactions(prev => ({
+              ...prev,
+              [newPost.post_id]: { likes: 0, dislikes: 0 }
+            }));
+          } else if (payload.eventType === 'UPDATE') {
+            // Update existing post
+            const updatedPost = payload.new;
+            setPosts(prevPosts => 
+              prevPosts.map(post => 
+                post.post_id === updatedPost.post_id ? updatedPost : post
+              )
+            );
+          } else if (payload.eventType === 'DELETE') {
+            // Remove deleted post
+            const deletedPostId = payload.old.post_id;
+            setPosts(prevPosts => 
+              prevPosts.filter(post => post.post_id !== deletedPostId)
+            );
+            
+            // Remove reactions for deleted post
+            const updatedReactions = { ...reactions };
+            delete updatedReactions[deletedPostId];
+            setReactions(updatedReactions);
+          }
+        }
+      )
+      .subscribe();
+
+    // Also listen for reaction changes
+    const reactionsChannel = supabase
+      .channel('reactions-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'reactions',
+          filter: `post_id=not.is.null` // Only listen for post reactions, not comment reactions
+        },
+        (payload) => {
+          console.log('Real-time reaction update:', payload);
+          // Re-fetch reactions for affected post
+          if (payload.new && payload.new.post_id) {
+            fetchReactionsForPosts([payload.new.post_id]);
+          } else if (payload.old && payload.old.post_id) {
+            fetchReactionsForPosts([payload.old.post_id]);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+      supabase.removeChannel(reactionsChannel);
+    };
   }, [communityId]);
 
   const fetchPosts = async () => {
     setLoading(true);
     try {
+      console.log('Fetching posts for community:', communityId);
       // Fetch posts for this community
       const { data, error } = await supabase
         .from('posts')
@@ -42,8 +119,12 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
         .eq('community_id', communityId)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
       
+      console.log('Posts data received:', data);
       setPosts(data || []);
       
       // Get reactions counts for each post
@@ -60,6 +141,7 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
 
   const fetchReactionsForPosts = async (postIds: string[]) => {
     try {
+      console.log('Fetching reactions for posts:', postIds);
       // Get all reactions for these posts
       const { data: reactionsData, error } = await supabase
         .from('reactions')
@@ -67,6 +149,8 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
         .in('post_id', postIds);
       
       if (error) throw error;
+      
+      console.log('Reactions data received:', reactionsData);
       
       // Calculate likes and dislikes for each post
       const reactionsMap: Record<string, {likes: number, dislikes: number, userReaction?: string}> = {};
@@ -93,7 +177,7 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
         });
       }
       
-      setReactions(reactionsMap);
+      setReactions(prev => ({ ...prev, ...reactionsMap }));
     } catch (error: any) {
       console.error('Error fetching reactions:', error);
     }
@@ -211,7 +295,24 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
   };
 
   if (loading) {
-    return <div className="text-center py-6">Loading posts...</div>;
+    return (
+      <div className="space-y-6">
+        {[1, 2, 3].map((i) => (
+          <Card key={i}>
+            <CardHeader>
+              <Skeleton className="h-6 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-16 w-full" />
+            </CardContent>
+            <CardFooter className="border-t py-3">
+              <Skeleton className="h-8 w-3/4" />
+            </CardFooter>
+          </Card>
+        ))}
+      </div>
+    );
   }
 
   if (posts.length === 0) {
