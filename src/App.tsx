@@ -8,6 +8,10 @@ import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import NotFound from "./pages/NotFound";
+import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import Communities from "./pages/Communities";
+import ProfileSettings from "./pages/ProfileSettings";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
 const queryClient = new QueryClient();
@@ -48,6 +52,13 @@ const AppRoutes = () => (
     <Route path="/" element={<Index />} />
     <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
     <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
+    
+    {/* Dashboard Routes */}
+    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/dashboard/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+    <Route path="/dashboard/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
+    <Route path="/dashboard/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
+    
     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
     <Route path="*" element={<NotFound />} />
   </Routes>

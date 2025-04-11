@@ -9,23 +9,95 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      communities: {
+        Row: {
+          community_id: string
+          created_at: string | null
+          created_by: string
+          description: string | null
+          name: string
+        }
+        Insert: {
+          community_id?: string
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          name: string
+        }
+        Update: {
+          community_id?: string
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          name?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
+          bio: string | null
           created_at: string | null
           full_name: string | null
+          grades: Json | null
+          hobbies: string[] | null
           id: string
+          portfolio: string | null
+          skills: string[] | null
+          standardised_testing: Json | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          grades?: Json | null
+          hobbies?: string[] | null
+          id: string
+          portfolio?: string | null
+          skills?: string[] | null
+          standardised_testing?: Json | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          grades?: Json | null
+          hobbies?: string[] | null
+          id?: string
+          portfolio?: string | null
+          skills?: string[] | null
+          standardised_testing?: Json | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          deadline: string | null
+          description: string | null
+          project_id: string
+          title: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
-          full_name?: string | null
-          id: string
+          created_by: string
+          deadline?: string | null
+          description?: string | null
+          project_id?: string
+          title: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
-          full_name?: string | null
-          id?: string
+          created_by?: string
+          deadline?: string | null
+          description?: string | null
+          project_id?: string
+          title?: string
           updated_at?: string | null
         }
         Relationships: []
