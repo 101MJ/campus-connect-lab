@@ -9,6 +9,41 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      comments: {
+        Row: {
+          author_id: string
+          comment_id: string
+          content: string
+          created_at: string | null
+          post_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id: string
+          comment_id?: string
+          content: string
+          created_at?: string | null
+          post_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string
+          comment_id?: string
+          content?: string
+          created_at?: string | null
+          post_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["post_id"]
+          },
+        ]
+      }
       communities: {
         Row: {
           community_id: string
@@ -32,6 +67,73 @@ export type Database = {
           name?: string
         }
         Relationships: []
+      }
+      community_members: {
+        Row: {
+          community_id: string
+          id: string
+          joined_at: string | null
+          user_id: string
+        }
+        Insert: {
+          community_id: string
+          id?: string
+          joined_at?: string | null
+          user_id: string
+        }
+        Update: {
+          community_id?: string
+          id?: string
+          joined_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_members_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["community_id"]
+          },
+        ]
+      }
+      posts: {
+        Row: {
+          author_id: string
+          community_id: string
+          content: string
+          created_at: string | null
+          post_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id: string
+          community_id: string
+          content: string
+          created_at?: string | null
+          post_id?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string
+          community_id?: string
+          content?: string
+          created_at?: string | null
+          post_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "posts_community_id_fkey"
+            columns: ["community_id"]
+            isOneToOne: false
+            referencedRelation: "communities"
+            referencedColumns: ["community_id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -101,6 +203,48 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      reactions: {
+        Row: {
+          comment_id: string | null
+          created_at: string | null
+          post_id: string | null
+          reaction_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          comment_id?: string | null
+          created_at?: string | null
+          post_id?: string | null
+          reaction_id?: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string | null
+          created_at?: string | null
+          post_id?: string | null
+          reaction_id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reactions_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["comment_id"]
+          },
+          {
+            foreignKeyName: "reactions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["post_id"]
+          },
+        ]
       }
       tasks: {
         Row: {

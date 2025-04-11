@@ -1,0 +1,289 @@
+
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { format } from 'date-fns';
+import { toast } from 'sonner';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
+import PostComments from './PostComments';
+
+interface PostListProps {
+  communityId: string;
+  isMember: boolean;
+}
+
+const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
+  const { user } = useAuth();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedPost, setExpandedPost] = useState<string | null>(null);
+  const [reactions, setReactions] = useState<Record<string, {likes: number, dislikes: number, userReaction?: string}>>({}); 
+
+  useEffect(() => {
+    fetchPosts();
+  }, [communityId]);
+
+  const fetchPosts = async () => {
+    setLoading(true);
+    try {
+      // Fetch posts for this community
+      const { data, error } = await supabase
+        .from('posts')
+        .select(`
+          post_id,
+          title,
+          content,
+          created_at,
+          author_id,
+          profiles(full_name)
+        `)
+        .eq('community_id', communityId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      setPosts(data || []);
+      
+      // Get reactions counts for each post
+      if (data && data.length > 0) {
+        await fetchReactionsForPosts(data.map(post => post.post_id));
+      }
+    } catch (error: any) {
+      console.error('Error fetching posts:', error);
+      toast.error('Failed to load posts');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchReactionsForPosts = async (postIds: string[]) => {
+    try {
+      // Get all reactions for these posts
+      const { data: reactionsData, error } = await supabase
+        .from('reactions')
+        .select('post_id, reaction_type, user_id')
+        .in('post_id', postIds);
+      
+      if (error) throw error;
+      
+      // Calculate likes and dislikes for each post
+      const reactionsMap: Record<string, {likes: number, dislikes: number, userReaction?: string}> = {};
+      
+      postIds.forEach(postId => {
+        reactionsMap[postId] = { likes: 0, dislikes: 0 };
+      });
+      
+      if (reactionsData) {
+        reactionsData.forEach((reaction) => {
+          const postId = reaction.post_id;
+          if (postId) {
+            if (reaction.reaction_type === 'like') {
+              reactionsMap[postId].likes += 1;
+            } else if (reaction.reaction_type === 'dislike') {
+              reactionsMap[postId].dislikes += 1;
+            }
+            
+            // Mark user's reaction
+            if (user && reaction.user_id === user.id) {
+              reactionsMap[postId].userReaction = reaction.reaction_type;
+            }
+          }
+        });
+      }
+      
+      setReactions(reactionsMap);
+    } catch (error: any) {
+      console.error('Error fetching reactions:', error);
+    }
+  };
+
+  const handleReaction = async (postId: string, reactionType: string) => {
+    if (!user) {
+      toast.error('You must be logged in to react');
+      return;
+    }
+    
+    if (!isMember) {
+      toast.error('You must join the community to react to posts');
+      return;
+    }
+    
+    const currentReaction = reactions[postId]?.userReaction;
+    
+    try {
+      if (currentReaction === reactionType) {
+        // User is removing their reaction
+        const { error } = await supabase
+          .from('reactions')
+          .delete()
+          .eq('post_id', postId)
+          .eq('user_id', user.id);
+          
+        if (error) throw error;
+        
+        // Update local state
+        setReactions(prev => {
+          const updated = { ...prev };
+          if (reactionType === 'like') {
+            updated[postId] = { 
+              ...updated[postId], 
+              likes: Math.max(0, updated[postId].likes - 1),
+              userReaction: undefined
+            };
+          } else {
+            updated[postId] = { 
+              ...updated[postId], 
+              dislikes: Math.max(0, updated[postId].dislikes - 1),
+              userReaction: undefined
+            };
+          }
+          return updated;
+        });
+        
+      } else {
+        // User is adding or changing reaction
+        if (currentReaction) {
+          // First remove the existing reaction
+          const { error } = await supabase
+            .from('reactions')
+            .delete()
+            .eq('post_id', postId)
+            .eq('user_id', user.id);
+            
+          if (error) throw error;
+          
+          // Update local state to remove old reaction
+          setReactions(prev => {
+            const updated = { ...prev };
+            if (currentReaction === 'like') {
+              updated[postId].likes = Math.max(0, updated[postId].likes - 1);
+            } else {
+              updated[postId].dislikes = Math.max(0, updated[postId].dislikes - 1);
+            }
+            return updated;
+          });
+        }
+        
+        // Add the new reaction
+        const { error } = await supabase
+          .from('reactions')
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+            reaction_type: reactionType
+          });
+          
+        if (error) throw error;
+        
+        // Update local state to add new reaction
+        setReactions(prev => {
+          const updated = { ...prev };
+          if (reactionType === 'like') {
+            updated[postId] = { 
+              ...updated[postId], 
+              likes: (updated[postId].likes || 0) + 1,
+              userReaction: 'like'
+            };
+          } else {
+            updated[postId] = { 
+              ...updated[postId], 
+              dislikes: (updated[postId].dislikes || 0) + 1,
+              userReaction: 'dislike'
+            };
+          }
+          return updated;
+        });
+      }
+    } catch (error: any) {
+      console.error('Error handling reaction:', error);
+      toast.error('Failed to update reaction');
+    }
+  };
+
+  const handleToggleComments = (postId: string) => {
+    if (expandedPost === postId) {
+      setExpandedPost(null);
+    } else {
+      setExpandedPost(postId);
+    }
+  };
+
+  if (loading) {
+    return <div className="text-center py-6">Loading posts...</div>;
+  }
+
+  if (posts.length === 0) {
+    return (
+      <Card className="border border-dashed">
+        <CardContent className="flex flex-col items-center justify-center py-8">
+          <p className="text-muted-foreground mb-2">No posts in this community yet</p>
+          {isMember && (
+            <p className="text-sm">Be the first to create a post!</p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {posts.map((post) => (
+        <Card key={post.post_id} className="overflow-hidden">
+          <CardHeader>
+            <CardTitle>{post.title}</CardTitle>
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <div>Posted by {post.profiles?.full_name || 'Unknown user'}</div>
+              <div>{format(new Date(post.created_at), 'MMM d, yyyy')}</div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="whitespace-pre-line">{post.content}</p>
+          </CardContent>
+          <CardFooter className="border-t bg-muted/30 py-3 flex justify-between">
+            <div className="flex items-center gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className={reactions[post.post_id]?.userReaction === 'like' ? 'text-green-600' : ''}
+                onClick={() => handleReaction(post.post_id, 'like')}
+                disabled={!user || !isMember}
+              >
+                <ThumbsUp className="h-4 w-4 mr-1" />
+                {reactions[post.post_id]?.likes || 0}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className={reactions[post.post_id]?.userReaction === 'dislike' ? 'text-red-600' : ''}
+                onClick={() => handleReaction(post.post_id, 'dislike')}
+                disabled={!user || !isMember}
+              >
+                <ThumbsDown className="h-4 w-4 mr-1" />
+                {reactions[post.post_id]?.dislikes || 0}
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => handleToggleComments(post.post_id)}
+              >
+                <MessageSquare className="h-4 w-4 mr-1" />
+                Comments
+              </Button>
+            </div>
+          </CardFooter>
+          
+          {expandedPost === post.post_id && (
+            <PostComments 
+              postId={post.post_id} 
+              isMember={isMember}
+            />
+          )}
+        </Card>
+      ))}
+    </div>
+  );
+};
+
+export default PostList;

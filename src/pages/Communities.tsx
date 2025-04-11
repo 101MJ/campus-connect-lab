@@ -37,6 +37,8 @@ import {
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import CommunityDetail from '@/components/communities/CommunityDetail';
 
 const communitySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -49,9 +51,12 @@ const Communities = () => {
   const { user } = useAuth();
   const [communities, setCommunities] = useState<any[]>([]);
   const [myCommunities, setMyCommunities] = useState<any[]>([]);
+  const [joinedCommunities, setJoinedCommunities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('all');
+  const [selectedCommunity, setSelectedCommunity] = useState<string | null>(null);
 
   const form = useForm<CommunityFormValues>({
     resolver: zodResolver(communitySchema),
@@ -87,8 +92,32 @@ const Communities = () => {
       
       if (userError) throw userError;
       
+      // Fetch user's joined communities
+      const { data: memberships, error: membershipsError } = await supabase
+        .from('community_members')
+        .select('community_id')
+        .eq('user_id', user!.id);
+        
+      if (membershipsError) throw membershipsError;
+      
+      const joinedCommunityIds = memberships?.map(m => m.community_id) || [];
+      
+      // If user has joined communities, fetch their details
+      let joined: any[] = [];
+      if (joinedCommunityIds.length > 0) {
+        const { data: joinedData, error: joinedError } = await supabase
+          .from('communities')
+          .select('*')
+          .in('community_id', joinedCommunityIds)
+          .order('created_at', { ascending: false });
+          
+        if (joinedError) throw joinedError;
+        joined = joinedData || [];
+      }
+      
       setCommunities(allCommunities || []);
       setMyCommunities(userCommunities || []);
+      setJoinedCommunities(joined);
     } catch (error: any) {
       console.error('Error fetching communities:', error);
       toast.error('Failed to load communities');
@@ -118,6 +147,18 @@ const Communities = () => {
       toast.success('Community created successfully');
       form.reset();
       setDialogOpen(false);
+      
+      // Join the community automatically
+      if (data && data.length > 0) {
+        await supabase
+          .from('community_members')
+          .insert({
+            community_id: data[0].community_id,
+            user_id: user.id
+          });
+        
+        setJoinedCommunities([...(data || []), ...joinedCommunities]);
+      }
     } catch (error: any) {
       console.error('Error creating community:', error);
       toast.error(error.message || 'Failed to create community');
@@ -139,12 +180,33 @@ const Communities = () => {
       
       setCommunities(communities.filter(c => c.community_id !== communityId));
       setMyCommunities(myCommunities.filter(c => c.community_id !== communityId));
+      setJoinedCommunities(joinedCommunities.filter(c => c.community_id !== communityId));
       toast.success('Community deleted successfully');
     } catch (error: any) {
       console.error('Error deleting community:', error);
       toast.error(error.message || 'Failed to delete community');
     }
   };
+
+  const handleViewCommunity = (communityId: string) => {
+    setSelectedCommunity(communityId);
+  };
+  
+  const handleBackToCommunities = () => {
+    setSelectedCommunity(null);
+  };
+
+  // If a community is selected, show the community detail view
+  if (selectedCommunity) {
+    return (
+      <DashboardLayout>
+        <CommunityDetail 
+          communityId={selectedCommunity} 
+          onBack={handleBackToCommunities}
+        />
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -211,93 +273,155 @@ const Communities = () => {
           </Dialog>
         </div>
 
-        {/* My Communities Section */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">My Communities</h2>
-          {isLoading ? (
-            <div className="text-center py-4">Loading communities...</div>
-          ) : myCommunities.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myCommunities.map((community) => (
-                <Card key={community.community_id}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Users className="w-5 h-5 mr-2 text-collabCorner-purple" />
-                      {community.name}
-                    </CardTitle>
-                    <CardDescription>
-                      Created {format(new Date(community.created_at), 'MMM d, yyyy')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {community.description || 'No description provided'}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="flex justify-end">
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      onClick={() => deleteCommunity(community.community_id)}
-                    >
-                      Delete
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-center text-muted-foreground">
-                  You haven't created any communities yet
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList>
+            <TabsTrigger value="all">All Communities</TabsTrigger>
+            <TabsTrigger value="joined">Joined Communities</TabsTrigger>
+            <TabsTrigger value="my">My Communities</TabsTrigger>
+          </TabsList>
 
-        {/* All Communities Section */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">All Communities</h2>
-          {isLoading ? (
-            <div className="text-center py-4">Loading communities...</div>
-          ) : communities.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {communities.map((community) => (
-                <Card key={community.community_id} className="hover:shadow-md transition-shadow">
-                  <CardHeader>
-                    <CardTitle className="flex items-center">
-                      <Users className="w-5 h-5 mr-2 text-collabCorner-purple" />
-                      {community.name}
-                    </CardTitle>
-                    <CardDescription>
-                      Created {format(new Date(community.created_at), 'MMM d, yyyy')}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground line-clamp-3">
-                      {community.description || 'No description provided'}
-                    </p>
-                  </CardContent>
-                  <CardFooter className="flex justify-end">
-                    <Button variant="outline" size="sm">
-                      View Details
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-6">
-                <p className="text-center text-muted-foreground">
-                  No communities available
-                </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+          {/* All Communities Tab */}
+          <TabsContent value="all">
+            {isLoading ? (
+              <div className="text-center py-4">Loading communities...</div>
+            ) : communities.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {communities.map((community) => (
+                  <Card key={community.community_id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Users className="w-5 h-5 mr-2 text-collabCorner-purple" />
+                        {community.name}
+                      </CardTitle>
+                      <CardDescription>
+                        Created {format(new Date(community.created_at), 'MMM d, yyyy')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {community.description || 'No description provided'}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex justify-end">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewCommunity(community.community_id)}
+                      >
+                        View Community
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-6">
+                  <p className="text-center text-muted-foreground">
+                    No communities available
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Joined Communities Tab */}
+          <TabsContent value="joined">
+            {isLoading ? (
+              <div className="text-center py-4">Loading communities...</div>
+            ) : joinedCommunities.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {joinedCommunities.map((community) => (
+                  <Card key={community.community_id} className="hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Users className="w-5 h-5 mr-2 text-collabCorner-purple" />
+                        {community.name}
+                      </CardTitle>
+                      <CardDescription>
+                        Created {format(new Date(community.created_at), 'MMM d, yyyy')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {community.description || 'No description provided'}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex justify-end">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewCommunity(community.community_id)}
+                      >
+                        View Community
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-6">
+                  <p className="text-center text-muted-foreground">
+                    You haven't joined any communities yet
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* My Communities Tab */}
+          <TabsContent value="my">
+            {isLoading ? (
+              <div className="text-center py-4">Loading communities...</div>
+            ) : myCommunities.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {myCommunities.map((community) => (
+                  <Card key={community.community_id}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center">
+                        <Users className="w-5 h-5 mr-2 text-collabCorner-purple" />
+                        {community.name}
+                      </CardTitle>
+                      <CardDescription>
+                        Created {format(new Date(community.created_at), 'MMM d, yyyy')}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground line-clamp-3">
+                        {community.description || 'No description provided'}
+                      </p>
+                    </CardContent>
+                    <CardFooter className="flex justify-between">
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => deleteCommunity(community.community_id)}
+                      >
+                        Delete
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewCommunity(community.community_id)}
+                      >
+                        View Community
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="p-6">
+                  <p className="text-center text-muted-foreground">
+                    You haven't created any communities yet
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );
