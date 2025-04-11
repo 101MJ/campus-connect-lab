@@ -43,6 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Show toast notifications for auth events
         if (event === 'SIGNED_IN') {
           toast.success('Signed in successfully');
+          navigate('/dashboard');
         } else if (event === 'SIGNED_OUT') {
           toast.success('Signed out successfully');
         }
@@ -82,7 +83,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      navigate('/');
+      // Remove this line since we already navigate in the onAuthStateChange event
+      // navigate('/');
     } catch (error: any) {
       toast.error(error.message || 'Failed to sign in');
       throw error;
