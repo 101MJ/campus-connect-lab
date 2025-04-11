@@ -20,9 +20,7 @@ interface Post {
   content: string;
   created_at: string;
   author_id: string;
-  profiles?: {
-    full_name: string | null;
-  } | null;
+  profiles?: PostProfile | null;
   community_id?: string;
 }
 
@@ -40,18 +38,18 @@ interface PostListProps {
 // Interfaces for Supabase real-time payloads
 interface RealtimePostPayload {
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-  new: Post | Record<string, any>;
-  old: Post | Record<string, any>;
+  new: Post;
+  old: Post;
 }
 
 interface RealtimeReactionPayload {
   eventType: 'INSERT' | 'UPDATE' | 'DELETE';
   new: {
-    post_id?: string;
+    post_id: string;
     [key: string]: any;
   };
   old: {
-    post_id?: string;
+    post_id: string;
     [key: string]: any;
   };
 }
@@ -177,13 +175,20 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
       
       // Make sure we handle possible profile errors by providing a default
       // and transforming the response to match our Post interface
-      const safeData = (data || []).map(post => ({
-        ...post,
-        profiles: post.profiles !== null && post.profiles !== undefined && 
-                 typeof post.profiles === 'object' && !('error' in post.profiles)
-          ? post.profiles
-          : { full_name: null }
-      })) as Post[];
+      const safeData = (data || []).map(post => {
+        // Check if profiles exists and has the error property (indicating a query error)
+        const hasProfileError = post.profiles && 
+                               typeof post.profiles === 'object' && 
+                               'error' in post.profiles;
+        
+        return {
+          ...post,
+          // Fix the null check here by using nullish coalescing to handle both null and error cases
+          profiles: hasProfileError || post.profiles === null 
+            ? { full_name: null } 
+            : post.profiles
+        };
+      }) as Post[];
       
       setPosts(safeData);
       
