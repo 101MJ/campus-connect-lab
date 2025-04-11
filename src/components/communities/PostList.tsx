@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +32,25 @@ interface PostListProps {
   isMember: boolean;
 }
 
+// Interfaces for Supabase real-time payloads
+interface RealtimePostPayload {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  new: Post;
+  old: Post;
+}
+
+interface RealtimeReactionPayload {
+  eventType: 'INSERT' | 'UPDATE' | 'DELETE';
+  new: {
+    post_id: string;
+    [key: string]: any;
+  };
+  old: {
+    post_id: string;
+    [key: string]: any;
+  };
+}
+
 const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
@@ -52,11 +72,13 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
           table: 'posts',
           filter: `community_id=eq.${communityId}`
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Real-time post update:', payload);
-          if (payload.eventType === 'INSERT') {
+          const typedPayload = payload as RealtimePostPayload;
+          
+          if (typedPayload.eventType === 'INSERT' && typedPayload.new) {
             // Add new post to the list
-            const newPost = payload.new as Post;
+            const newPost = typedPayload.new;
             setPosts(prevPosts => [newPost, ...prevPosts]);
             
             // Initialize reactions for the new post
@@ -64,25 +86,29 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
               ...prev,
               [newPost.post_id]: { likes: 0, dislikes: 0 }
             }));
-          } else if (payload.eventType === 'UPDATE') {
+          } else if (typedPayload.eventType === 'UPDATE' && typedPayload.new) {
             // Update existing post
-            const updatedPost = payload.new as Post;
+            const updatedPost = typedPayload.new;
             setPosts(prevPosts => 
               prevPosts.map(post => 
                 post.post_id === updatedPost.post_id ? updatedPost : post
               )
             );
-          } else if (payload.eventType === 'DELETE') {
+          } else if (typedPayload.eventType === 'DELETE' && typedPayload.old) {
             // Remove deleted post
-            const deletedPostId = (payload.old as Post).post_id;
+            const deletedPostId = typedPayload.old.post_id;
             setPosts(prevPosts => 
               prevPosts.filter(post => post.post_id !== deletedPostId)
             );
             
             // Remove reactions for deleted post
-            const updatedReactions = { ...reactions };
-            delete updatedReactions[deletedPostId];
-            setReactions(updatedReactions);
+            setReactions(prev => {
+              const updatedReactions = { ...prev };
+              if (deletedPostId && updatedReactions[deletedPostId]) {
+                delete updatedReactions[deletedPostId];
+              }
+              return updatedReactions;
+            });
           }
         }
       )
@@ -99,13 +125,15 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
           table: 'reactions',
           filter: `post_id=not.is.null` // Only listen for post reactions, not comment reactions
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Real-time reaction update:', payload);
+          const typedPayload = payload as RealtimeReactionPayload;
+          
           // Re-fetch reactions for affected post
-          if (payload.new && payload.new.post_id) {
-            fetchReactionsForPosts([payload.new.post_id as string]);
-          } else if (payload.old && payload.old.post_id) {
-            fetchReactionsForPosts([payload.old.post_id as string]);
+          if (typedPayload.new && typedPayload.new.post_id) {
+            fetchReactionsForPosts([typedPayload.new.post_id]);
+          } else if (typedPayload.old && typedPayload.old.post_id) {
+            fetchReactionsForPosts([typedPayload.old.post_id]);
           }
         }
       )
@@ -141,7 +169,7 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
       }
       
       console.log('Posts data received:', data);
-      setPosts(data || []);
+      setPosts(data as Post[] || []);
       
       // Get reactions counts for each post
       if (data && data.length > 0) {
