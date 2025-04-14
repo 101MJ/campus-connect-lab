@@ -5,10 +5,21 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export interface Profile {
+  id: string;
+  full_name?: string;
+  bio?: string;
+  portfolio?: string;
+  skills?: string[];
+  hobbies?: string[];
+  grades?: Record<string, any>;
+  standardised_testing?: Record<string, any>;
+}
+
 interface AuthContextValue {
   session: Session | null;
   user: User | null;
-  profile: any | null;
+  profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;
