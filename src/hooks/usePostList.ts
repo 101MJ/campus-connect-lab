@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -79,18 +78,10 @@ export const usePostList = (communityId: string) => {
       
       if (error) throw error;
       
-      const safeData = (data || []).map(post => {
-        const hasProfileError = post.profiles && 
-                              typeof post.profiles === 'object' && 
-                              'error' in post.profiles;
-        
-        return {
-          ...post,
-          profiles: hasProfileError || post.profiles === null 
-            ? { full_name: null } 
-            : post.profiles
-        };
-      }) as Post[];
+      const safeData = (data || []).map(post => ({
+        ...post,
+        profiles: post.profiles || { full_name: null }
+      })) as Post[];
       
       setPosts(safeData);
       
