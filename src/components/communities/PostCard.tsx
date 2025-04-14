@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, User } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PostComments from './PostComments';
@@ -24,18 +24,27 @@ const PostCard: React.FC<PostCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
-    <Card key={post.post_id} className="overflow-hidden">
+    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-blue-50">
       <CardHeader>
-        <CardTitle>{post.title}</CardTitle>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <div>Posted by {post.profiles?.full_name ?? 'Unknown user'}</div>
-          <div>{format(new Date(post.created_at), 'MMM d, yyyy')}</div>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="p-2 bg-collabCorner-purple/10 rounded-full">
+            <User className="h-5 w-5 text-collabCorner-purple" />
+          </div>
+          <div>
+            <CardTitle className="text-lg">{post.title}</CardTitle>
+            <div className="text-sm text-muted-foreground">
+              Posted by {post.profiles?.full_name ?? 'Unknown user'}
+            </div>
+          </div>
+          <div className="ml-auto text-sm text-muted-foreground">
+            {format(new Date(post.created_at), 'MMM d, yyyy')}
+          </div>
         </div>
       </CardHeader>
       <CardContent>
         <p className="whitespace-pre-line">{post.content}</p>
       </CardContent>
-      <CardFooter className="border-t bg-muted/30 py-3 flex justify-between">
+      <CardFooter className="border-t bg-white py-3 flex justify-between">
         <div className="flex items-center gap-4">
           <PostReaction
             postId={post.post_id}
@@ -47,6 +56,7 @@ const PostCard: React.FC<PostCardProps> = ({
             variant="ghost" 
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
+            className="text-collabCorner-purple hover:text-collabCorner-purple/80 hover:bg-collabCorner-purple/10"
           >
             <MessageSquare className="h-4 w-4 mr-1" />
             Comments
@@ -55,10 +65,12 @@ const PostCard: React.FC<PostCardProps> = ({
       </CardFooter>
       
       {isExpanded && (
-        <PostComments 
-          postId={post.post_id} 
-          isMember={isMember}
-        />
+        <div className="border-t">
+          <PostComments 
+            postId={post.post_id} 
+            isMember={isMember}
+          />
+        </div>
       )}
     </Card>
   );

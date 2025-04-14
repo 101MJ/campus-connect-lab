@@ -2,6 +2,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Profile } from '@/contexts/AuthContext';
+import { User, Globe, Briefcase, Heart } from 'lucide-react';
 
 interface ProfileCardProps {
   profile: Profile | null;
@@ -9,42 +10,59 @@ interface ProfileCardProps {
 
 const ProfileCard = ({ profile }: ProfileCardProps) => {
   return (
-    <Card className="md:col-span-2">
+    <Card className="md:col-span-2 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-blue-50">
       <CardHeader>
-        <CardTitle>About Me</CardTitle>
-        <CardDescription>Your profile information</CardDescription>
+        <div className="flex items-center gap-3">
+          <div className="p-3 bg-collabCorner-purple text-white rounded-full">
+            <User className="h-6 w-6" />
+          </div>
+          <div>
+            <CardTitle>About Me</CardTitle>
+            <CardDescription>Your profile information</CardDescription>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <h3 className="text-lg font-semibold">{profile?.full_name}</h3>
-            <p className="text-muted-foreground mt-1">
+            <h3 className="text-xl font-semibold text-collabCorner-purple">{profile?.full_name}</h3>
+            <p className="text-muted-foreground mt-2">
               {profile?.bio || 'No bio added yet'}
             </p>
           </div>
 
           {profile?.portfolio && (
-            <div>
-              <h4 className="font-medium">Portfolio</h4>
-              <a 
-                href={profile.portfolio} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                {profile.portfolio}
-              </a>
+            <div className="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-shadow">
+              <div className="p-2 bg-collabCorner-purple/10 rounded-full">
+                <Globe className="h-5 w-5 text-collabCorner-purple" />
+              </div>
+              <div>
+                <h4 className="font-medium">Portfolio</h4>
+                <a 
+                  href={profile.portfolio} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-collabCorner-purple hover:text-collabCorner-purple/80 transition-colors"
+                >
+                  {profile.portfolio}
+                </a>
+              </div>
             </div>
           )}
 
           {profile?.skills && profile.skills.length > 0 && (
-            <div>
-              <h4 className="font-medium">Skills</h4>
-              <div className="flex flex-wrap gap-2 mt-1">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-collabCorner-purple/10 rounded-full">
+                  <Briefcase className="h-5 w-5 text-collabCorner-purple" />
+                </div>
+                <h4 className="font-medium">Skills</h4>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
                 {profile.skills.map((skill, index) => (
                   <span 
                     key={index}
-                    className="bg-gray-100 px-2 py-1 rounded-full text-sm"
+                    className="bg-collabCorner-purple/10 text-collabCorner-purple px-3 py-1 rounded-full text-sm hover:bg-collabCorner-purple/20 transition-colors"
                   >
                     {skill}
                   </span>
@@ -54,13 +72,18 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
           )}
 
           {profile?.hobbies && profile.hobbies.length > 0 && (
-            <div>
-              <h4 className="font-medium">Hobbies</h4>
-              <div className="flex flex-wrap gap-2 mt-1">
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-collabCorner-purple/10 rounded-full">
+                  <Heart className="h-5 w-5 text-collabCorner-purple" />
+                </div>
+                <h4 className="font-medium">Hobbies</h4>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
                 {profile.hobbies.map((hobby, index) => (
                   <span 
                     key={index}
-                    className="bg-gray-100 px-2 py-1 rounded-full text-sm"
+                    className="bg-collabCorner-purple/10 text-collabCorner-purple px-3 py-1 rounded-full text-sm hover:bg-collabCorner-purple/20 transition-colors"
                   >
                     {hobby}
                   </span>
