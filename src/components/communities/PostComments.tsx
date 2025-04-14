@@ -13,40 +13,75 @@ interface PostCommentsProps {
   isMember: boolean;
 }
 
+interface Comment {
+  comment_id: string;
+  content: string;
+  created_at: string;
+  author_id: string;
+  author_name?: string | null;
+}
+
 const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
   const { user } = useAuth();
-  const [comments, setComments] = useState<any[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [reactions, setReactions] = useState<Record<string, {likes: number, dislikes: number, userReaction?: string}>>({});
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    fetchComments();
+    if (postId) {
+      fetchComments();
+    }
   }, [postId]);
 
   const fetchComments = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      // First fetch comments
+      const { data: commentsData, error: commentsError } = await supabase
         .from('comments')
         .select(`
           comment_id,
           content,
           created_at,
-          author_id,
-          profiles(full_name)
+          author_id
         `)
         .eq('post_id', postId)
         .order('created_at', { ascending: true });
       
-      if (error) throw error;
+      if (commentsError) throw commentsError;
       
-      setComments(data || []);
-      
-      // Get reactions for these comments
-      if (data && data.length > 0) {
-        await fetchReactionsForComments(data.map(comment => comment.comment_id));
+      if (commentsData && commentsData.length > 0) {
+        // Then fetch profiles separately
+        const authorIds = commentsData.map(comment => comment.author_id);
+        
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', authorIds);
+          
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+        }
+        
+        // Map author names to comments
+        const profilesMap = profilesData ? profilesData.reduce((acc, profile) => {
+          acc[profile.id] = profile.full_name;
+          return acc;
+        }, {} as Record<string, string | null>) : {};
+        
+        const commentsWithNames = commentsData.map(comment => ({
+          ...comment,
+          author_name: profilesMap[comment.author_id] || 'Unknown user'
+        }));
+        
+        setComments(commentsWithNames);
+        
+        // Get reactions for these comments
+        await fetchReactionsForComments(commentsData.map(comment => comment.comment_id));
+      } else {
+        setComments([]);
       }
     } catch (error: any) {
       console.error('Error fetching comments:', error);
@@ -121,18 +156,30 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
           author_id: user.id,
           content: newComment.trim()
         })
-        .select(`
-          comment_id,
-          content,
-          created_at,
-          author_id,
-          profiles(full_name)
-        `);
+        .select('comment_id, content, created_at, author_id');
       
       if (error) throw error;
       
       if (data && data.length > 0) {
-        setComments(prev => [...prev, data[0]]);
+        // Get author name from profiles
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .single();
+          
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+        }
+        
+        const authorName = profileData?.full_name || 'Unknown user';
+        
+        const newCommentWithAuthor = {
+          ...data[0],
+          author_name: authorName
+        };
+        
+        setComments(prev => [...prev, newCommentWithAuthor]);
         setNewComment('');
         
         // Initialize reaction state for new comment
@@ -288,7 +335,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
           comments.map(comment => (
             <div key={comment.comment_id} className="pb-3">
               <div className="flex justify-between text-sm">
-                <span className="font-medium">{comment.profiles?.full_name || 'Unknown user'}</span>
+                <span className="font-medium">{comment.author_name}</span>
                 <span className="text-muted-foreground">
                   {format(new Date(comment.created_at), 'MMM d, yyyy')}
                 </span>

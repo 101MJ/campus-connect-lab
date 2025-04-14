@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -63,7 +64,8 @@ export const usePostList = (communityId: string) => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // First fetch posts
+      const { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
           post_id,
@@ -71,22 +73,43 @@ export const usePostList = (communityId: string) => {
           content,
           created_at,
           author_id,
-          profiles(full_name)
+          community_id
         `)
         .eq('community_id', communityId)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
-      
-      const safeData = (data || []).map(post => ({
-        ...post,
-        profiles: post.profiles || { full_name: null }
-      })) as Post[];
-      
-      setPosts(safeData);
-      
-      if (safeData.length > 0) {
-        await fetchReactionsForPosts(safeData.map(post => post.post_id));
+      if (postsError) throw postsError;
+
+      // Then fetch profiles separately
+      if (postsData && postsData.length > 0) {
+        const authorIds = postsData.map(post => post.author_id);
+        
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, full_name')
+          .in('id', authorIds);
+          
+        if (profilesError) {
+          console.error('Error fetching profiles:', profilesError);
+        }
+        
+        // Map profiles to posts
+        const profilesMap = profilesData ? profilesData.reduce((acc, profile) => {
+          acc[profile.id] = { full_name: profile.full_name };
+          return acc;
+        }, {} as Record<string, PostProfile>) : {};
+        
+        const postsWithProfiles = postsData.map(post => ({
+          ...post,
+          profiles: profilesMap[post.author_id] || { full_name: null }
+        }));
+        
+        setPosts(postsWithProfiles);
+        
+        // Fetch reactions
+        await fetchReactionsForPosts(postsData.map(post => post.post_id));
+      } else {
+        setPosts([]);
       }
     } catch (error: any) {
       console.error('Error fetching posts:', error);
