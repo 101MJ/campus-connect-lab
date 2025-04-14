@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +5,9 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { useUserTasks } from '@/hooks/useUserTasks';
+import { format } from 'date-fns';
+import { CheckCircle2, Circle } from 'lucide-react';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -15,10 +17,10 @@ const Dashboard = () => {
     projects: true,
     communities: true
   });
+  const { data: tasks, isLoading: tasksLoading } = useUserTasks();
 
   useEffect(() => {
     if (user) {
-      // Fetch user's projects
       const fetchProjects = async () => {
         const { data, error } = await supabase
           .from('projects')
@@ -35,7 +37,6 @@ const Dashboard = () => {
         setLoading(prev => ({ ...prev, projects: false }));
       };
 
-      // Fetch communities
       const fetchCommunities = async () => {
         const { data, error } = await supabase
           .from('communities')
@@ -64,7 +65,6 @@ const Dashboard = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
-          {/* Profile Info */}
           <Card className="md:col-span-2">
             <CardHeader>
               <CardTitle>About Me</CardTitle>
@@ -128,7 +128,6 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Summary Stats */}
           <Card>
             <CardHeader>
               <CardTitle>Summary</CardTitle>
@@ -146,7 +145,6 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Academic Information */}
         <Tabs defaultValue="projects" className="w-full">
           <TabsList>
             <TabsTrigger value="projects">Recent Projects</TabsTrigger>
@@ -247,6 +245,47 @@ const Dashboard = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Tasks</CardTitle>
+            <CardDescription>Your most recent tasks across all projects</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {tasksLoading ? (
+              <div className="text-center py-4">Loading tasks...</div>
+            ) : tasks && tasks.length > 0 ? (
+              <div className="space-y-4">
+                {tasks.map((task) => (
+                  <div key={task.task_id} className="flex items-start gap-3 border-b last:border-0 pb-4 last:pb-0">
+                    <div className="mt-1">
+                      {task.is_completed ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <Circle className="h-5 w-5 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium">{task.title}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Project: {task.project.title}
+                      </p>
+                      {task.deadline && (
+                        <p className="text-sm text-muted-foreground">
+                          Due: {format(new Date(task.deadline), 'PPP')}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-4 text-muted-foreground">
+                No tasks found
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   );
