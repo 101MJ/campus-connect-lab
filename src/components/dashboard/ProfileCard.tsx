@@ -13,7 +13,7 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
     <Card className="md:col-span-2 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-soft-purple/20 border-soft-purple/10">
       <CardHeader>
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-collabCorner-purple/90 text-white rounded-full shadow-md">
+          <div className="p-3 bg-blue-500/20 text-blue-800 rounded-full shadow-md">
             <User className="h-6 w-6" />
           </div>
           <div>
@@ -34,8 +34,8 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
           {profile?.portfolio && (
             <div className="p-3 bg-white rounded-lg hover:shadow-md transition-shadow border border-soft-purple/20">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-collabCorner-purple/10 rounded-full">
-                  <Globe className="h-5 w-5 text-collabCorner-purple" />
+                <div className="p-2 bg-green-500/10 rounded-full">
+                  <Globe className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
                   <h4 className="font-medium text-collabCorner-purple">Portfolio</h4>
@@ -43,7 +43,7 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
                     href={profile.portfolio} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-collabCorner-purple hover:text-collabCorner-purple/80 transition-colors"
+                    className="text-blue-600 hover:text-blue-800 transition-colors"
                   >
                     {profile.portfolio}
                   </a>
@@ -55,8 +55,8 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
           {profile?.skills && profile.skills.length > 0 && (
             <div className="p-3 bg-white rounded-lg hover:shadow-md transition-shadow border border-soft-purple/20">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-collabCorner-purple/10 rounded-full">
-                  <Briefcase className="h-5 w-5 text-collabCorner-purple" />
+                <div className="p-2 bg-orange-500/10 rounded-full">
+                  <Briefcase className="h-5 w-5 text-orange-600" />
                 </div>
                 <h4 className="font-medium text-collabCorner-purple">Skills</h4>
               </div>
@@ -76,8 +76,8 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
           {profile?.hobbies && profile.hobbies.length > 0 && (
             <div className="p-3 bg-white rounded-lg hover:shadow-md transition-shadow border border-soft-purple/20">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-collabCorner-purple/10 rounded-full">
-                  <Heart className="h-5 w-5 text-collabCorner-purple" />
+                <div className="p-2 bg-red-500/10 rounded-full">
+                  <Heart className="h-5 w-5 text-red-600" />
                 </div>
                 <h4 className="font-medium text-collabCorner-purple">Hobbies</h4>
               </div>

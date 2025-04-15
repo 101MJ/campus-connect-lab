@@ -17,22 +17,22 @@ const SummaryCard = ({ projectsCount, communitiesCount }: SummaryCardProps) => {
       <CardContent className="space-y-6">
         <div className="flex items-center justify-between p-3 bg-white rounded-lg hover:shadow-md transition-shadow border border-soft-purple/20">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-collabCorner-purple/10 rounded-full">
-              <FolderGit2 className="h-5 w-5 text-collabCorner-purple" />
+            <div className="p-2 bg-blue-500/10 rounded-full">
+              <FolderGit2 className="h-5 w-5 text-blue-600" />
             </div>
-            <span className="text-collabCorner-purple">Projects</span>
+            <span className="text-blue-800">Projects</span>
           </div>
-          <span className="text-xl font-semibold text-collabCorner-purple">{projectsCount}</span>
+          <span className="text-xl font-semibold text-blue-800">{projectsCount}</span>
         </div>
         
         <div className="flex items-center justify-between p-3 bg-white rounded-lg hover:shadow-md transition-shadow border border-soft-purple/20">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-collabCorner-purple/10 rounded-full">
-              <Users className="h-5 w-5 text-collabCorner-purple" />
+            <div className="p-2 bg-green-500/10 rounded-full">
+              <Users className="h-5 w-5 text-green-600" />
             </div>
-            <span className="text-collabCorner-purple">Communities</span>
+            <span className="text-green-800">Communities</span>
           </div>
-          <span className="text-xl font-semibold text-collabCorner-purple">{communitiesCount}</span>
+          <span className="text-xl font-semibold text-green-800">{communitiesCount}</span>
         </div>
       </CardContent>
     </Card>
