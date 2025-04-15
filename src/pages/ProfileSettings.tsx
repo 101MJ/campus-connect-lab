@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -136,11 +137,15 @@ const ProfileSettings = () => {
     
     setIsLoading(true);
     try {
+      // Make sure test_name is included and not optional as it's required by the database schema
       const { error } = await supabase
         .from('user_standardized_tests')
         .insert({
           user_id: user.id,
-          ...values
+          test_name: values.test_name, // Explicitly include this required field
+          test_score: values.test_score,
+          year: values.year,
+          notes: values.notes
         });
 
       if (error) throw error;
@@ -159,11 +164,15 @@ const ProfileSettings = () => {
     
     setIsLoading(true);
     try {
+      // Make sure title is included and not optional as it's required by the database schema
       const { error } = await supabase
         .from('user_awards')
         .insert({
           user_id: user.id,
-          ...values
+          title: values.title, // Explicitly include this required field
+          organization: values.organization,
+          year: values.year,
+          description: values.description
         });
 
       if (error) throw error;
