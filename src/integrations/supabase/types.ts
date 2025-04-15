@@ -293,6 +293,129 @@ export type Database = {
           },
         ]
       }
+      user_awards: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          organization: string | null
+          title: string
+          updated_at: string
+          user_id: string
+          year: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          organization?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+          year?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          organization?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          year?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_awards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_grades: {
+        Row: {
+          created_at: string
+          gpa_marks: string | null
+          grade: string | null
+          id: string
+          notes: string | null
+          updated_at: string
+          user_id: string
+          year: string | null
+        }
+        Insert: {
+          created_at?: string
+          gpa_marks?: string | null
+          grade?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id: string
+          year?: string | null
+        }
+        Update: {
+          created_at?: string
+          gpa_marks?: string | null
+          grade?: string | null
+          id?: string
+          notes?: string | null
+          updated_at?: string
+          user_id?: string
+          year?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_grades_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_standardized_tests: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          test_name: string
+          test_score: string | null
+          updated_at: string
+          user_id: string
+          year: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          test_name: string
+          test_score?: string | null
+          updated_at?: string
+          user_id: string
+          year?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          test_name?: string
+          test_score?: string | null
+          updated_at?: string
+          user_id?: string
+          year?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_standardized_tests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

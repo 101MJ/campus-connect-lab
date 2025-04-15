@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,8 +7,8 @@ import { toast } from 'sonner';
 import { useUserTasks } from '@/hooks/useUserTasks';
 import ProfileCard from '@/components/dashboard/ProfileCard';
 import SummaryCard from '@/components/dashboard/SummaryCard';
+import AcademicsCard from '@/components/dashboard/AcademicsCard';
 import ProjectsTab from '@/components/dashboard/ProjectsTab';
-import AcademicsTab from '@/components/dashboard/AcademicsTab';
 import CommunitiesTab from '@/components/dashboard/CommunitiesTab';
 import TasksList from '@/components/dashboard/TasksList';
 
@@ -68,27 +67,23 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold">Profile</h1>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-4 gap-6">
           <ProfileCard profile={profile} />
           <SummaryCard 
             projectsCount={projects.length}
             communitiesCount={communities.length}
           />
+          <AcademicsCard />
         </div>
 
         <Tabs defaultValue="projects" className="w-full">
           <TabsList>
-            <TabsTrigger value="projects">Recent Projects</TabsTrigger>
-            <TabsTrigger value="academics">Academic Info</TabsTrigger>
+            <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="communities">Communities</TabsTrigger>
           </TabsList>
           
           <TabsContent value="projects" className="mt-4">
             <ProjectsTab projects={projects} loading={loading.projects} />
-          </TabsContent>
-          
-          <TabsContent value="academics" className="mt-4">
-            <AcademicsTab profile={profile} />
           </TabsContent>
           
           <TabsContent value="communities" className="mt-4">

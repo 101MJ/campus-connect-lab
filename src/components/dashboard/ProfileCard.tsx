@@ -32,26 +32,28 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
           </div>
 
           {profile?.portfolio && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-shadow">
-              <div className="p-2 bg-collabCorner-purple/10 rounded-full">
-                <Globe className="h-5 w-5 text-collabCorner-purple" />
-              </div>
-              <div>
-                <h4 className="font-medium">Portfolio</h4>
-                <a 
-                  href={profile.portfolio} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-collabCorner-purple hover:text-collabCorner-purple/80 transition-colors"
-                >
-                  {profile.portfolio}
-                </a>
+            <div className="p-3 bg-white rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-collabCorner-purple/10 rounded-full">
+                  <Globe className="h-5 w-5 text-collabCorner-purple" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Portfolio</h4>
+                  <a 
+                    href={profile.portfolio} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-collabCorner-purple hover:text-collabCorner-purple/80 transition-colors"
+                  >
+                    {profile.portfolio}
+                  </a>
+                </div>
               </div>
             </div>
           )}
 
           {profile?.skills && profile.skills.length > 0 && (
-            <div className="space-y-2">
+            <div className="p-3 bg-white rounded-lg hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-collabCorner-purple/10 rounded-full">
                   <Briefcase className="h-5 w-5 text-collabCorner-purple" />
@@ -72,7 +74,7 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
           )}
 
           {profile?.hobbies && profile.hobbies.length > 0 && (
-            <div className="space-y-2">
+            <div className="p-3 bg-white rounded-lg hover:shadow-md transition-shadow">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-collabCorner-purple/10 rounded-full">
                   <Heart className="h-5 w-5 text-collabCorner-purple" />
