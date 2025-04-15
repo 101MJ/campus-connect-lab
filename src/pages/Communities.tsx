@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -75,7 +74,6 @@ const Communities = () => {
   const fetchCommunities = async () => {
     setIsLoading(true);
     try {
-      // Fetch all communities
       const { data: allCommunities, error: allError } = await supabase
         .from('communities')
         .select('*')
@@ -83,7 +81,6 @@ const Communities = () => {
       
       if (allError) throw allError;
       
-      // Fetch user's created communities
       const { data: userCommunities, error: userError } = await supabase
         .from('communities')
         .select('*')
@@ -92,7 +89,6 @@ const Communities = () => {
       
       if (userError) throw userError;
       
-      // Fetch user's joined communities
       const { data: memberships, error: membershipsError } = await supabase
         .from('community_members')
         .select('community_id')
@@ -102,7 +98,6 @@ const Communities = () => {
       
       const joinedCommunityIds = memberships?.map(m => m.community_id) || [];
       
-      // If user has joined communities, fetch their details
       let joined: any[] = [];
       if (joinedCommunityIds.length > 0) {
         const { data: joinedData, error: joinedError } = await supabase
@@ -148,7 +143,6 @@ const Communities = () => {
       form.reset();
       setDialogOpen(false);
       
-      // Join the community automatically
       if (data && data.length > 0) {
         await supabase
           .from('community_members')
@@ -196,7 +190,6 @@ const Communities = () => {
     setSelectedCommunity(null);
   };
 
-  // If a community is selected, show the community detail view
   if (selectedCommunity) {
     return (
       <DashboardLayout>
@@ -212,11 +205,13 @@ const Communities = () => {
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Communities</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-collabCorner-purple to-collabCorner-purple-light bg-clip-text text-transparent">
+            Communities
+          </h1>
           
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-collabCorner-purple">
+              <Button className="bg-collabCorner-purple hover:bg-collabCorner-purple-dark transition-colors">
                 <Plus className="mr-2 h-4 w-4" /> New Community
               </Button>
             </DialogTrigger>
@@ -274,24 +269,31 @@ const Communities = () => {
         </div>
 
         <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All Communities</TabsTrigger>
-            <TabsTrigger value="joined">Joined Communities</TabsTrigger>
-            <TabsTrigger value="my">My Communities</TabsTrigger>
+          <TabsList className="bg-muted/50">
+            <TabsTrigger value="all" className="data-[state=active]:bg-collabCorner-purple data-[state=active]:text-white">
+              All Communities
+            </TabsTrigger>
+            <TabsTrigger value="joined" className="data-[state=active]:bg-collabCorner-purple data-[state=active]:text-white">
+              Joined Communities
+            </TabsTrigger>
+            <TabsTrigger value="my" className="data-[state=active]:bg-collabCorner-purple data-[state=active]:text-white">
+              My Communities
+            </TabsTrigger>
           </TabsList>
 
-          {/* All Communities Tab */}
           <TabsContent value="all">
             {isLoading ? (
               <div className="text-center py-4">Loading communities...</div>
             ) : communities.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {communities.map((community) => (
-                  <Card key={community.community_id} className="hover:shadow-md transition-shadow">
+                  <Card key={community.community_id} className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-blue-50 group">
                     <CardHeader>
                       <CardTitle className="flex items-center">
-                        <Users className="w-5 h-5 mr-2 text-collabCorner-purple" />
-                        {community.name}
+                        <div className="p-2 bg-collabCorner-purple/10 rounded-full group-hover:bg-collabCorner-purple/20 transition-colors">
+                          <Users className="w-5 h-5 text-collabCorner-purple" />
+                        </div>
+                        <span className="ml-2">{community.name}</span>
                       </CardTitle>
                       <CardDescription>
                         Created {format(new Date(community.created_at), 'MMM d, yyyy')}
@@ -307,6 +309,7 @@ const Communities = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => handleViewCommunity(community.community_id)}
+                        className="hover:bg-collabCorner-purple hover:text-white transition-colors"
                       >
                         View Community
                       </Button>
@@ -325,18 +328,19 @@ const Communities = () => {
             )}
           </TabsContent>
 
-          {/* Joined Communities Tab */}
           <TabsContent value="joined">
             {isLoading ? (
               <div className="text-center py-4">Loading communities...</div>
             ) : joinedCommunities.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {joinedCommunities.map((community) => (
-                  <Card key={community.community_id} className="hover:shadow-md transition-shadow">
+                  <Card key={community.community_id} className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-blue-50 group">
                     <CardHeader>
                       <CardTitle className="flex items-center">
-                        <Users className="w-5 h-5 mr-2 text-collabCorner-purple" />
-                        {community.name}
+                        <div className="p-2 bg-collabCorner-purple/10 rounded-full group-hover:bg-collabCorner-purple/20 transition-colors">
+                          <Users className="w-5 h-5 text-collabCorner-purple" />
+                        </div>
+                        <span className="ml-2">{community.name}</span>
                       </CardTitle>
                       <CardDescription>
                         Created {format(new Date(community.created_at), 'MMM d, yyyy')}
@@ -352,6 +356,7 @@ const Communities = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => handleViewCommunity(community.community_id)}
+                        className="hover:bg-collabCorner-purple hover:text-white transition-colors"
                       >
                         View Community
                       </Button>
@@ -370,7 +375,6 @@ const Communities = () => {
             )}
           </TabsContent>
 
-          {/* My Communities Tab */}
           <TabsContent value="my">
             {isLoading ? (
               <div className="text-center py-4">Loading communities...</div>
@@ -380,8 +384,10 @@ const Communities = () => {
                   <Card key={community.community_id}>
                     <CardHeader>
                       <CardTitle className="flex items-center">
-                        <Users className="w-5 h-5 mr-2 text-collabCorner-purple" />
-                        {community.name}
+                        <div className="p-2 bg-collabCorner-purple/10 rounded-full group-hover:bg-collabCorner-purple/20 transition-colors">
+                          <Users className="w-5 h-5 text-collabCorner-purple" />
+                        </div>
+                        <span className="ml-2">{community.name}</span>
                       </CardTitle>
                       <CardDescription>
                         Created {format(new Date(community.created_at), 'MMM d, yyyy')}
@@ -397,6 +403,7 @@ const Communities = () => {
                         variant="destructive" 
                         size="sm" 
                         onClick={() => deleteCommunity(community.community_id)}
+                        className="hover:bg-collabCorner-purple hover:text-white transition-colors"
                       >
                         Delete
                       </Button>
@@ -404,6 +411,7 @@ const Communities = () => {
                         variant="outline" 
                         size="sm"
                         onClick={() => handleViewCommunity(community.community_id)}
+                        className="hover:bg-collabCorner-purple hover:text-white transition-colors"
                       >
                         View Community
                       </Button>

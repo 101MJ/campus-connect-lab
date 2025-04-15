@@ -7,7 +7,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, List, CheckSquare } from 'lucide-react';
+import { Plus, List, CheckSquare, FolderGit2 } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Dialog,
@@ -196,11 +196,13 @@ const Projects = () => {
     <DashboardLayout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Projects</h1>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-collabCorner-purple to-collabCorner-purple-light bg-clip-text text-transparent">
+            Projects
+          </h1>
           
           <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-collabCorner-purple">
+              <Button className="bg-collabCorner-purple hover:bg-collabCorner-purple-dark transition-colors">
                 <Plus className="mr-2 h-4 w-4" /> New Project
               </Button>
             </DialogTrigger>
@@ -284,11 +286,16 @@ const Projects = () => {
                   <Card 
                     key={project.project_id} 
                     className={`cursor-pointer transition-all hover:border-collabCorner-purple 
-                              ${selectedProject === project.project_id ? 'border-collabCorner-purple shadow-md' : ''}`}
+                              ${selectedProject === project.project_id ? 'border-collabCorner-purple shadow-md bg-gradient-to-br from-white to-blue-50' : ''}`}
                     onClick={() => handleProjectClick(project.project_id)}
                   >
                     <CardHeader className="p-4 pb-2">
-                      <CardTitle className="text-base">{project.title}</CardTitle>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <div className="p-2 rounded-full bg-collabCorner-purple/10">
+                          <FolderGit2 className="h-4 w-4 text-collabCorner-purple" />
+                        </div>
+                        {project.title}
+                      </CardTitle>
                     </CardHeader>
                     <CardFooter className="p-2 pt-0 flex justify-between">
                       <CardDescription className="text-xs">
@@ -310,7 +317,7 @@ const Projects = () => {
                 ))}
               </div>
             ) : (
-              <Card>
+              <Card className="border-dashed">
                 <CardContent className="text-center py-8">
                   <p className="text-muted-foreground">
                     No projects yet. Click "New Project" to get started.
@@ -325,7 +332,7 @@ const Projects = () => {
             {selectedProject ? (
               <>
                 <div className="mb-4">
-                  <Card>
+                  <Card className="bg-gradient-to-br from-white to-blue-50">
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
@@ -337,7 +344,7 @@ const Projects = () => {
                         
                         <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
                           <DialogTrigger asChild>
-                            <Button size="sm">
+                            <Button size="sm" className="bg-collabCorner-purple hover:bg-collabCorner-purple-dark transition-colors">
                               <Plus className="mr-2 h-4 w-4" /> Add Task
                             </Button>
                           </DialogTrigger>
@@ -377,11 +384,11 @@ const Projects = () => {
                 <div>
                   <Tabs defaultValue="tasks">
                     <TabsList className="mb-4">
-                      <TabsTrigger value="tasks">
+                      <TabsTrigger value="tasks" className="data-[state=active]:bg-collabCorner-purple data-[state=active]:text-white">
                         <List className="h-4 w-4 mr-2" />
                         Tasks
                       </TabsTrigger>
-                      <TabsTrigger value="completed">
+                      <TabsTrigger value="completed" className="data-[state=active]:bg-collabCorner-purple data-[state=active]:text-white">
                         <CheckSquare className="h-4 w-4 mr-2" />
                         Completed
                       </TabsTrigger>
@@ -391,9 +398,13 @@ const Projects = () => {
                       <TaskList projectId={selectedProject} />
                     </TabsContent>
                     <TabsContent value="completed">
-                      <p className="text-center py-4 text-muted-foreground">
-                        Completed tasks will be shown here
-                      </p>
+                      <Card>
+                        <CardContent className="text-center py-4">
+                          <p className="text-muted-foreground">
+                            Completed tasks will be shown here
+                          </p>
+                        </CardContent>
+                      </Card>
                     </TabsContent>
                   </Tabs>
                 </div>
