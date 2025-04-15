@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -27,6 +26,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useQuery } from '@tanstack/react-query';
 
 const profileSchema = z.object({
   full_name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -38,18 +38,35 @@ const profileSchema = z.object({
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
 
-const academicSchema = z.object({
-  grades: z.string().optional(),
-  standardised_testing: z.string().optional(),
+const gradeSchema = z.object({
+  grade: z.string().min(1, 'Grade is required'),
+  gpa_marks: z.string().optional(),
+  year: z.string().min(1, 'Year is required'),
+  notes: z.string().optional(),
 });
 
-type AcademicFormValues = z.infer<typeof academicSchema>;
+const testSchema = z.object({
+  test_name: z.string().min(1, 'Test name is required'),
+  test_score: z.string().optional(),
+  year: z.string().min(1, 'Year is required'),
+  notes: z.string().optional(),
+});
+
+const awardSchema = z.object({
+  title: z.string().min(1, 'Award title is required'),
+  organization: z.string().optional(),
+  year: z.string().min(1, 'Year is required'),
+  description: z.string().optional(),
+});
+
+type GradeFormValues = z.infer<typeof gradeSchema>;
+type TestFormValues = z.infer<typeof testSchema>;
+type AwardFormValues = z.infer<typeof awardSchema>;
 
 const ProfileSettings = () => {
   const { user, profile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Profile form
   const profileForm = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -61,16 +78,104 @@ const ProfileSettings = () => {
     },
   });
 
-  // Academic form
-  const academicForm = useForm<AcademicFormValues>({
-    resolver: zodResolver(academicSchema),
+  const gradeForm = useForm<GradeFormValues>({
+    resolver: zodResolver(gradeSchema),
     defaultValues: {
-      grades: profile?.grades ? JSON.stringify(profile.grades, null, 2) : '',
-      standardised_testing: profile?.standardised_testing 
-        ? JSON.stringify(profile.standardised_testing, null, 2) 
-        : '',
+      grade: '',
+      gpa_marks: '',
+      year: '',
+      notes: '',
     },
   });
+
+  const testForm = useForm<TestFormValues>({
+    resolver: zodResolver(testSchema),
+    defaultValues: {
+      test_name: '',
+      test_score: '',
+      year: '',
+      notes: '',
+    },
+  });
+
+  const awardForm = useForm<AwardFormValues>({
+    resolver: zodResolver(awardSchema),
+    defaultValues: {
+      title: '',
+      organization: '',
+      year: '',
+      description: '',
+    },
+  });
+
+  const onGradeSubmit = async (values: GradeFormValues) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_grades')
+        .insert({
+          user_id: user.id,
+          ...values
+        });
+
+      if (error) throw error;
+      toast.success('Grade added successfully');
+      gradeForm.reset();
+    } catch (error: any) {
+      console.error('Error adding grade:', error);
+      toast.error(error.message || 'Failed to add grade');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onTestSubmit = async (values: TestFormValues) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_standardized_tests')
+        .insert({
+          user_id: user.id,
+          ...values
+        });
+
+      if (error) throw error;
+      toast.success('Test score added successfully');
+      testForm.reset();
+    } catch (error: any) {
+      console.error('Error adding test score:', error);
+      toast.error(error.message || 'Failed to add test score');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onAwardSubmit = async (values: AwardFormValues) => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_awards')
+        .insert({
+          user_id: user.id,
+          ...values
+        });
+
+      if (error) throw error;
+      toast.success('Award added successfully');
+      awardForm.reset();
+    } catch (error: any) {
+      console.error('Error adding award:', error);
+      toast.error(error.message || 'Failed to add award');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const onProfileSubmit = async (values: ProfileFormValues) => {
     if (!user) return;
@@ -102,42 +207,6 @@ const ProfileSettings = () => {
     } catch (error: any) {
       console.error('Error updating profile:', error);
       toast.error(error.message || 'Failed to update profile');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const onAcademicSubmit = async (values: AcademicFormValues) => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    try {
-      // Parse JSON strings
-      let grades = null;
-      let standardisedTesting = null;
-      
-      try {
-        if (values.grades) grades = JSON.parse(values.grades);
-        if (values.standardised_testing) standardisedTesting = JSON.parse(values.standardised_testing);
-      } catch (e) {
-        toast.error('Invalid JSON format. Please check your input.');
-        setIsLoading(false);
-        return;
-      }
-      
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          grades,
-          standardised_testing: standardisedTesting,
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-      toast.success('Academic information updated successfully');
-    } catch (error: any) {
-      console.error('Error updating academic info:', error);
-      toast.error(error.message || 'Failed to update academic information');
     } finally {
       setIsLoading(false);
     }
@@ -260,29 +329,26 @@ const ProfileSettings = () => {
             </Card>
           </TabsContent>
           
-          <TabsContent value="academic" className="mt-4">
+          <TabsContent value="academic" className="mt-4 space-y-6">
+            {/* Grades Form */}
             <Card>
-              <Form {...academicForm}>
-                <form onSubmit={academicForm.handleSubmit(onAcademicSubmit)}>
+              <Form {...gradeForm}>
+                <form onSubmit={gradeForm.handleSubmit(onGradeSubmit)}>
                   <CardHeader>
-                    <CardTitle>Academic Information</CardTitle>
+                    <CardTitle>Add Grade</CardTitle>
                     <CardDescription>
-                      Update your grades and standardized test scores (in JSON format)
+                      Add your academic grades and marks
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <FormField
-                      control={academicForm.control}
-                      name="grades"
+                      control={gradeForm.control}
+                      name="grade"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Grades</FormLabel>
+                          <FormLabel>Grade</FormLabel>
                           <FormControl>
-                            <Textarea 
-                              {...field} 
-                              placeholder='{ "math": "A", "science": "B+" }'
-                              className="font-mono resize-none min-h-[150px]"
-                            />
+                            <Input {...field} placeholder="Enter your grade" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -290,17 +356,41 @@ const ProfileSettings = () => {
                     />
                     
                     <FormField
-                      control={academicForm.control}
-                      name="standardised_testing"
+                      control={gradeForm.control}
+                      name="gpa_marks"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Standardized Testing</FormLabel>
+                          <FormLabel>GPA/Marks</FormLabel>
                           <FormControl>
-                            <Textarea 
-                              {...field} 
-                              placeholder='{ "SAT": 1400, "ACT": 30 }'
-                              className="font-mono resize-none min-h-[150px]"
-                            />
+                            <Input {...field} placeholder="Enter your GPA or marks" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={gradeForm.control}
+                      name="year"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Year</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter the year" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={gradeForm.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notes</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="Add any additional notes" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -309,7 +399,159 @@ const ProfileSettings = () => {
                   </CardContent>
                   <CardFooter>
                     <Button type="submit" disabled={isLoading}>
-                      {isLoading ? 'Saving...' : 'Save Academic Info'}
+                      {isLoading ? 'Adding...' : 'Add Grade'}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Form>
+            </Card>
+
+            {/* Standardized Tests Form */}
+            <Card>
+              <Form {...testForm}>
+                <form onSubmit={testForm.handleSubmit(onTestSubmit)}>
+                  <CardHeader>
+                    <CardTitle>Add Standardized Test</CardTitle>
+                    <CardDescription>
+                      Add your standardized test scores
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={testForm.control}
+                      name="test_name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Test Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter test name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={testForm.control}
+                      name="test_score"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Test Score</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter your score" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={testForm.control}
+                      name="year"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Year</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter the year" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={testForm.control}
+                      name="notes"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Notes</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="Add any additional notes" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                  <CardFooter>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? 'Adding...' : 'Add Test Score'}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Form>
+            </Card>
+
+            {/* Awards Form */}
+            <Card>
+              <Form {...awardForm}>
+                <form onSubmit={awardForm.handleSubmit(onAwardSubmit)}>
+                  <CardHeader>
+                    <CardTitle>Add Award</CardTitle>
+                    <CardDescription>
+                      Add your awards and achievements
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <FormField
+                      control={awardForm.control}
+                      name="title"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Award Title</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter award title" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={awardForm.control}
+                      name="organization"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Organization</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter organization name" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={awardForm.control}
+                      name="year"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Year</FormLabel>
+                          <FormControl>
+                            <Input {...field} placeholder="Enter the year" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={awardForm.control}
+                      name="description"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Description</FormLabel>
+                          <FormControl>
+                            <Textarea {...field} placeholder="Add award description" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                  <CardFooter>
+                    <Button type="submit" disabled={isLoading}>
+                      {isLoading ? 'Adding...' : 'Add Award'}
                     </Button>
                   </CardFooter>
                 </form>
