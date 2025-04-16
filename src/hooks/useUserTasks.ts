@@ -33,7 +33,8 @@ export function useUserTasks() {
           project:projects(title)
         `)
         .eq('created_by', user.id)
-        .order('created_at', { ascending: false })
+        .eq('is_completed', false)
+        .order('deadline', { ascending: true, nullsLast: true })
         .limit(5);
 
       if (error) throw error;

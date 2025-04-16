@@ -23,8 +23,8 @@ const TasksList = ({ tasks, loading }: TasksListProps) => {
   return (
     <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-blue-50">
       <CardHeader>
-        <CardTitle className="text-collabCorner-purple">Recent Tasks</CardTitle>
-        <CardDescription>Your most recent tasks across all projects</CardDescription>
+        <CardTitle className="text-collabCorner-purple">Pending Tasks</CardTitle>
+        <CardDescription>Your upcoming tasks that need attention</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
