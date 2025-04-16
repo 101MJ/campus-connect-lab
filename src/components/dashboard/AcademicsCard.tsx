@@ -62,9 +62,10 @@ const AcademicsCard = () => {
     setEditingItem(null);
   };
 
-  const handleDelete = async (type: string, id: string) => {
+  const handleDelete = async (type: 'grade' | 'test' | 'award', id: string) => {
     try {
-      let table = '';
+      let table: 'user_grades' | 'user_standardized_tests' | 'user_awards';
+      
       switch (type) {
         case 'grade':
           table = 'user_grades';
@@ -95,7 +96,8 @@ const AcademicsCard = () => {
     if (!editingItem) return;
 
     try {
-      let table = '';
+      let table: 'user_grades' | 'user_standardized_tests' | 'user_awards';
+      
       switch (editingItem.type) {
         case 'grade':
           table = 'user_grades';
