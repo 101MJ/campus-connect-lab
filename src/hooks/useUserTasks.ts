@@ -34,7 +34,7 @@ export function useUserTasks() {
         `)
         .eq('created_by', user.id)
         .eq('is_completed', false)
-        .order('deadline', { ascending: true, nullsLast: true })
+        .order('deadline', { ascending: true })
         .limit(5);
 
       if (error) throw error;
