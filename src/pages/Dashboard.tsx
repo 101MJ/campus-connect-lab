@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,7 +7,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useUserTasks } from '@/hooks/useUserTasks';
 import ProfileCard from '@/components/dashboard/ProfileCard';
-import SummaryCard from '@/components/dashboard/SummaryCard';
 import AcademicsCard from '@/components/dashboard/AcademicsCard';
 import ProjectsTab from '@/components/dashboard/ProjectsTab';
 import CommunitiesTab from '@/components/dashboard/CommunitiesTab';
@@ -67,9 +67,9 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold">Profile</h1>
         </div>
 
-        <div className="grid md:grid-cols-4 gap-6">
-          <ProfileCard profile={profile} />
-          <SummaryCard 
+        <div className="grid md:grid-cols-3 gap-6">
+          <ProfileCard 
+            profile={profile}
             projectsCount={projects.length}
             communitiesCount={communities.length}
           />

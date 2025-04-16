@@ -2,13 +2,15 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Profile } from '@/contexts/AuthContext';
-import { User, Globe, Briefcase, Heart } from 'lucide-react';
+import { User, Globe, Briefcase, Heart, FolderGit2, Users } from 'lucide-react';
 
 interface ProfileCardProps {
   profile: Profile | null;
+  projectsCount: number;
+  communitiesCount: number;
 }
 
-const ProfileCard = ({ profile }: ProfileCardProps) => {
+const ProfileCard = ({ profile, projectsCount, communitiesCount }: ProfileCardProps) => {
   return (
     <Card className="md:col-span-2 hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-soft-purple/20 border-soft-purple/10">
       <CardHeader>
@@ -29,6 +31,28 @@ const ProfileCard = ({ profile }: ProfileCardProps) => {
             <p className="text-muted-foreground mt-2 bg-soft-purple/10 p-3 rounded-lg">
               {profile?.bio || 'No bio added yet'}
             </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center justify-between p-3 bg-white rounded-lg hover:shadow-md transition-shadow border border-soft-purple/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/10 rounded-full">
+                  <FolderGit2 className="h-5 w-5 text-blue-600" />
+                </div>
+                <span className="text-blue-800">Projects</span>
+              </div>
+              <span className="text-xl font-semibold text-blue-800">{projectsCount}</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-white rounded-lg hover:shadow-md transition-shadow border border-soft-purple/20">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-500/10 rounded-full">
+                  <Users className="h-5 w-5 text-green-600" />
+                </div>
+                <span className="text-green-800">Communities</span>
+              </div>
+              <span className="text-xl font-semibold text-green-800">{communitiesCount}</span>
+            </div>
           </div>
 
           {profile?.portfolio && (
