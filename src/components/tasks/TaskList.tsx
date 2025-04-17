@@ -15,9 +15,10 @@ interface Task {
 
 interface TaskListProps {
   projectId: string | null;
+  showCompleted?: boolean;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
+const TaskList: React.FC<TaskListProps> = ({ projectId, showCompleted = false }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -27,7 +28,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
     } else {
       setTasks([]);
     }
-  }, [projectId]);
+  }, [projectId, showCompleted]);
 
   const fetchTasks = async () => {
     if (!projectId) return;
@@ -38,6 +39,7 @@ const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
         .from('tasks')
         .select('*')
         .eq('project_id', projectId)
+        .eq('is_completed', showCompleted)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -59,11 +61,20 @@ const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
       
       if (error) throw error;
       
-      setTasks(tasks.map(task => 
-        task.task_id === taskId ? { ...task, is_completed: isCompleted } : task
-      ));
+      // If the task status change means it should no longer appear in this list,
+      // remove it from the tasks array
+      if (isCompleted !== showCompleted) {
+        setTasks(tasks.filter(task => task.task_id !== taskId));
+      } else {
+        setTasks(tasks.map(task => 
+          task.task_id === taskId ? { ...task, is_completed: isCompleted } : task
+        ));
+      }
       
       toast.success(`Task ${isCompleted ? 'completed' : 'reopened'}`);
+      
+      // Refetch tasks to ensure the lists are up to date
+      fetchTasks();
     } catch (error: any) {
       console.error('Error updating task status:', error);
       toast.error('Failed to update task status');
@@ -96,7 +107,14 @@ const TaskList: React.FC<TaskListProps> = ({ projectId }) => {
   }
 
   if (tasks.length === 0) {
-    return <div className="text-center py-4 text-muted-foreground">No tasks found for this project</div>;
+    return (
+      <div className="text-center py-4 text-muted-foreground">
+        {showCompleted 
+          ? "No completed tasks found for this project" 
+          : "No active tasks found for this project"
+        }
+      </div>
+    );
   }
 
   return (

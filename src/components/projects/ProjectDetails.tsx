@@ -78,16 +78,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask }) =
           </TabsList>
           
           <TabsContent value="tasks" className="h-full">
-            <TaskList projectId={project.project_id} />
+            <TaskList projectId={project.project_id} showCompleted={false} />
           </TabsContent>
           <TabsContent value="completed" className="h-full">
-            <Card>
-              <CardContent className="text-center py-4">
-                <p className="text-muted-foreground">
-                  Completed tasks will be shown here
-                </p>
-              </CardContent>
-            </Card>
+            <TaskList projectId={project.project_id} showCompleted={true} />
           </TabsContent>
         </Tabs>
       </div>

@@ -17,6 +17,8 @@ import ProjectDetails from '@/components/projects/ProjectDetails';
 import EmptyProjectState from '@/components/projects/EmptyProjectState';
 import { useProjects } from '@/hooks/useProjects';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const Projects: React.FC = () => {
   const {
@@ -32,6 +34,15 @@ const Projects: React.FC = () => {
 
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
+  
+  // Form state for task creation
+  const [taskForm, setTaskForm] = useState({
+    title: '',
+    description: '',
+    deadline: '',
+    notes: ''
+  });
+  const [isSubmittingTask, setIsSubmittingTask] = useState(false);
 
   const onSubmitProject = async (values: ProjectFormValues) => {
     const success = await createProject(values);
@@ -41,7 +52,44 @@ const Projects: React.FC = () => {
   };
 
   const onSubmitTask = async (values: any) => {
-    setTaskDialogOpen(false);
+    if (!selectedProject || !values.title) return;
+    
+    setIsSubmittingTask(true);
+    
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          title: values.title,
+          description: values.description || null,
+          deadline: values.deadline || null,
+          notes: values.notes || null,
+          project_id: selectedProject,
+          created_by: getProjectById(selectedProject)?.created_by
+        })
+        .select();
+        
+      if (error) throw error;
+      
+      toast.success('Task created successfully');
+      setTaskDialogOpen(false);
+      setTaskForm({
+        title: '',
+        description: '',
+        deadline: '',
+        notes: ''
+      });
+      
+      // Force refresh of the project page - this is added to fix the refresh issue
+      const event = new CustomEvent('task-created');
+      window.dispatchEvent(event);
+      
+    } catch (error: any) {
+      console.error('Error creating task:', error);
+      toast.error('Failed to create task');
+    } finally {
+      setIsSubmittingTask(false);
+    }
   };
 
   const handleProjectClick = (projectId: string) => {
@@ -117,7 +165,7 @@ const Projects: React.FC = () => {
                     <TaskForm 
                       projectId={selectedProject}
                       onSubmit={onSubmitTask}
-                      isSubmitting={false}
+                      isSubmitting={isSubmittingTask}
                     />
                   )}
                 </DialogContent>
