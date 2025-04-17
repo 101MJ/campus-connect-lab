@@ -7,9 +7,8 @@ import EmptyProjectState from '@/components/projects/EmptyProjectState';
 import ProjectHeader from '@/components/projects/ProjectHeader';
 import TaskFormDialog from '@/components/projects/TaskFormDialog';
 import { useProjects } from '@/hooks/useProjects';
+import { useTaskManagement } from '@/hooks/useTaskManagement';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 const Projects: React.FC = () => {
   const {
@@ -24,9 +23,9 @@ const Projects: React.FC = () => {
     fetchProjects
   } = useProjects();
 
+  const { isSubmittingTask, createTask } = useTaskManagement();
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
-  const [isSubmittingTask, setIsSubmittingTask] = useState(false);
 
   const onSubmitProject = async (values: ProjectFormValues) => {
     const success = await createProject(values);
@@ -36,35 +35,14 @@ const Projects: React.FC = () => {
   };
 
   const onSubmitTask = async (values: any) => {
-    if (!selectedProject || !values.title) return;
+    if (!selectedProject) return;
     
-    setIsSubmittingTask(true);
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .insert({
-          title: values.title,
-          description: values.description || null,
-          deadline: values.deadline || null,
-          notes: values.notes || null,
-          project_id: selectedProject,
-          created_by: getProjectById(selectedProject)?.created_by
-        })
-        .select();
-        
-      if (error) throw error;
-      
-      toast.success('Task created successfully');
+    const selectedProjectData = getProjectById(selectedProject);
+    if (!selectedProjectData) return;
+
+    const success = await createTask(values, selectedProject, selectedProjectData.created_by);
+    if (success) {
       setTaskDialogOpen(false);
-      
-      const event = new CustomEvent('task-created');
-      window.dispatchEvent(event);
-      
-    } catch (error: any) {
-      console.error('Error creating task:', error);
-      toast.error('Failed to create task');
-    } finally {
-      setIsSubmittingTask(false);
     }
   };
 
