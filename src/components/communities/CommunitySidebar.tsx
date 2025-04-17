@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { Clock, Search } from 'lucide-react';
+import { Clock, Search, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { RecentPost } from '@/hooks/usePostList';
@@ -17,16 +17,15 @@ interface Community {
 interface CommunitySidebarProps {
   myCommunities: Community[];
   joinedCommunities: Community[];
-  allCommunities: Community[];
   recentPosts: RecentPost[];
   loading: boolean;
-  activeTab: string;
-  onTabChange: (tab: string) => void;
   onViewCommunity: (communityId: string) => void;
   onSearch: (query: string) => void;
 }
 
 const CommunitySidebar = ({ 
+  myCommunities,
+  joinedCommunities,
   recentPosts, 
   loading,
   onViewCommunity,
@@ -53,6 +52,58 @@ const CommunitySidebar = ({
         </CardContent>
       </Card>
 
+      {/* My Communities */}
+      {myCommunities.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-collabCorner-purple" />
+              My Communities
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {myCommunities.map(community => (
+              <div 
+                key={community.community_id}
+                onClick={() => onViewCommunity(community.community_id)}
+                className="cursor-pointer p-2 rounded-md hover:bg-muted transition-colors"
+              >
+                <h4 className="font-medium text-sm">{community.name}</h4>
+                {community.description && (
+                  <p className="text-xs text-muted-foreground line-clamp-1">{community.description}</p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Joined Communities */}
+      {joinedCommunities.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Users className="h-5 w-5 text-collabCorner-purple" />
+              Joined Communities
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {joinedCommunities.map(community => (
+              <div 
+                key={community.community_id}
+                onClick={() => onViewCommunity(community.community_id)}
+                className="cursor-pointer p-2 rounded-md hover:bg-muted transition-colors"
+              >
+                <h4 className="font-medium text-sm">{community.name}</h4>
+                {community.description && (
+                  <p className="text-xs text-muted-foreground line-clamp-1">{community.description}</p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Recent Posts */}
       <Card>
         <CardHeader className="pb-3">
@@ -70,7 +121,7 @@ const CommunitySidebar = ({
               </div>
             ))
           ) : recentPosts.length > 0 ? (
-            recentPosts.slice(0, 10).map(post => (
+            recentPosts.map(post => (
               <div 
                 key={post.post_id} 
                 className="py-2 cursor-pointer hover:text-collabCorner-purple"
