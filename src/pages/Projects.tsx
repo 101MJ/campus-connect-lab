@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -131,14 +132,12 @@ const Projects: React.FC = () => {
 
 export default Projects;
 
-import { FC } from 'react';
-
 interface TaskFormProps {
   projectId: string;
   onSubmit: (values: any) => Promise<void>;
   isSubmitting: boolean;
 }
 
-const TaskForm: FC<TaskFormProps> = ({ projectId, onSubmit, isSubmitting }) => {
+const TaskForm: React.FC<TaskFormProps> = ({ projectId, onSubmit, isSubmitting }) => {
   return null;
 };
