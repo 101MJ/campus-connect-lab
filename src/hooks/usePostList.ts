@@ -3,10 +3,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-interface PostProfile {
-  full_name: string | null;
-}
-
 export interface Post {
   post_id: string;
   title: string;
@@ -14,7 +10,15 @@ export interface Post {
   created_at: string;
   author_id: string;
   profiles?: PostProfile | null;
-  community_id?: string;
+  community_id: string;
+}
+
+export interface RecentPost extends Post {
+  communityName?: string;
+}
+
+interface PostProfile {
+  full_name: string | null;
 }
 
 export interface PostReaction {

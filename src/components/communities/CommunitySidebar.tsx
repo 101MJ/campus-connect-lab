@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Users, Clock, PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
+import { RecentPost } from '@/hooks/usePostList';
 
 interface Community {
   community_id: string;
@@ -26,7 +26,7 @@ interface CommunitySidebarProps {
   myCommunities: Community[];
   joinedCommunities: Community[];
   allCommunities: Community[];
-  recentPosts: Post[];
+  recentPosts: RecentPost[];
   recommendedCommunities: Community[];
   loading: boolean;
   activeTab: string;

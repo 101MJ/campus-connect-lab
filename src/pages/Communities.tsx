@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,7 +32,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import CommunityDetail from '@/components/communities/CommunityDetail';
 import CommunitySidebar from '@/components/communities/CommunitySidebar';
 import PostList from '@/components/communities/PostList';
-import { Post } from '@/hooks/usePostList';
+import { Post, RecentPost } from '@/hooks/usePostList';
 
 const communitySchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -152,7 +151,9 @@ const Communities = () => {
           title,
           created_at,
           community_id,
-          communities (name)
+          communities (name),
+          content,
+          author_id
         `)
         .order('created_at', { ascending: false })
         .limit(10);
@@ -167,8 +168,8 @@ const Communities = () => {
         community_id: post.community_id,
         // @ts-ignore - We know communities has a name field from our query
         communityName: post.communities?.name,
-        author_id: '',
-        content: ''
+        author_id: post.author_id,
+        content: post.content
       }));
       
       setRecentPosts(formattedPosts);
