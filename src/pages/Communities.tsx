@@ -49,10 +49,6 @@ interface Community {
   created_by: string;
 }
 
-interface RecentPost extends Post {
-  communityName?: string;
-}
-
 const Communities = () => {
   const { user } = useAuth();
   const [communities, setCommunities] = useState<Community[]>([]);
@@ -84,7 +80,6 @@ const Communities = () => {
   const fetchCommunities = async () => {
     setIsLoading(true);
     try {
-      // Fetch all communities
       const { data: allCommunities, error: allError } = await supabase
         .from('communities')
         .select('*')
@@ -92,7 +87,6 @@ const Communities = () => {
       
       if (allError) throw allError;
       
-      // Fetch user's created communities
       const { data: userCommunities, error: userError } = await supabase
         .from('communities')
         .select('*')
@@ -101,7 +95,6 @@ const Communities = () => {
       
       if (userError) throw userError;
       
-      // Fetch user's memberships
       const { data: memberships, error: membershipsError } = await supabase
         .from('community_members')
         .select('community_id')
@@ -111,7 +104,6 @@ const Communities = () => {
       
       const joinedCommunityIds = memberships?.map(m => m.community_id) || [];
       
-      // Fetch joined communities
       let joined: Community[] = [];
       if (joinedCommunityIds.length > 0) {
         const { data: joinedData, error: joinedError } = await supabase
@@ -124,15 +116,13 @@ const Communities = () => {
         joined = joinedData || [];
       }
       
-      // Generate recommended communities (communities user hasn't joined yet)
       const joinedAndOwnedIds = [...joinedCommunityIds, ...userCommunities?.map(c => c.community_id) || []];
       const recommended = allCommunities?.filter(c => !joinedAndOwnedIds.includes(c.community_id)) || [];
       
       setCommunities(allCommunities || []);
       setMyCommunities(userCommunities || []);
       setJoinedCommunities(joined);
-      setRecommendedCommunities(recommended.slice(0, 5)); // Just take top 5 recommendations
-      
+      setRecommendedCommunities(recommended.slice(0, 5));
     } catch (error: any) {
       console.error('Error fetching communities:', error);
       toast.error('Failed to load communities');
@@ -143,7 +133,6 @@ const Communities = () => {
 
   const fetchRecentPosts = async () => {
     try {
-      // Fetch recent posts
       const { data: recentPostsData, error } = await supabase
         .from('posts')
         .select(`
@@ -160,13 +149,11 @@ const Communities = () => {
         
       if (error) throw error;
       
-      // Format the data to include community names
       const formattedPosts: RecentPost[] = (recentPostsData || []).map(post => ({
         post_id: post.post_id,
         title: post.title,
         created_at: post.created_at,
         community_id: post.community_id,
-        // @ts-ignore - We know communities has a name field from our query
         communityName: post.communities?.name,
         author_id: post.author_id,
         content: post.content
@@ -201,7 +188,6 @@ const Communities = () => {
       form.reset();
       setDialogOpen(false);
       
-      // Add user as member of their own community
       if (data && data.length > 0) {
         await supabase
           .from('community_members')
@@ -212,7 +198,6 @@ const Communities = () => {
         
         setJoinedCommunities([...(data || []), ...joinedCommunities]);
         
-        // Refetch communities to update all lists
         fetchCommunities();
       }
     } catch (error: any) {
@@ -239,7 +224,6 @@ const Communities = () => {
       setJoinedCommunities(joinedCommunities.filter(c => c.community_id !== communityId));
       toast.success('Community deleted successfully');
       
-      // Refetch communities after deletion
       fetchCommunities();
       fetchRecentPosts();
     } catch (error: any) {
@@ -335,7 +319,6 @@ const Communities = () => {
             </Dialog>
           </div>
 
-          {/* Featured/Default Community Content */}
           {activeTab === 'all' && joinedCommunities.length > 0 ? (
             <Card>
               <CardContent className="p-6">
@@ -380,7 +363,6 @@ const Communities = () => {
           )}
         </div>
 
-        {/* Sidebar */}
         <CommunitySidebar 
           myCommunities={myCommunities}
           joinedCommunities={joinedCommunities}
