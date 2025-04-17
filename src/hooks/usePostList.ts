@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -67,8 +68,8 @@ export const usePostList = (communityId: string) => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      // First fetch user's joined and owned community IDs to filter posts
-      let postQuery = supabase
+      // First fetch posts for the specific community
+      let { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
           post_id,
@@ -76,20 +77,34 @@ export const usePostList = (communityId: string) => {
           content,
           created_at,
           author_id,
-          community_id,
-          profiles (
-            full_name
-          )
+          community_id
         `)
         .eq('community_id', communityId)
         .order('created_at', { ascending: false });
-
-      const { data: postsData, error: postsError } = await postQuery;
       
       if (postsError) throw postsError;
-
-      // Then fetch reactions for the posts to calculate like counts
+      
+      // Fetch profile information separately for each post
       if (postsData && postsData.length > 0) {
+        // Create a mapping of posts with properly typed profiles
+        const postsWithProfiles: Post[] = [];
+        
+        for (const post of postsData) {
+          // Fetch author information
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', post.author_id)
+            .single();
+            
+          // Add post with profile to the array
+          postsWithProfiles.push({
+            ...post,
+            profiles: profileData || { full_name: null }
+          });
+        }
+
+        // Fetch reactions for the posts
         const { data: reactionsData, error: reactionsError } = await supabase
           .from('reactions')
           .select('post_id, reaction_type')
@@ -108,7 +123,7 @@ export const usePostList = (communityId: string) => {
         });
 
         // Sort posts by likes if it's the main community feed
-        const sortedPosts = postsData.sort((a, b) => 
+        const sortedPosts = postsWithProfiles.sort((a, b) => 
           (likeCounts[b.post_id] || 0) - (likeCounts[a.post_id] || 0)
         );
         
