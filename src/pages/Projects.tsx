@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
@@ -35,7 +34,6 @@ const Projects: React.FC = () => {
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   
-  // Form state for task creation
   const [taskForm, setTaskForm] = useState({
     title: '',
     description: '',
@@ -80,7 +78,6 @@ const Projects: React.FC = () => {
         notes: ''
       });
       
-      // Force refresh of the project page - this is added to fix the refresh issue
       const event = new CustomEvent('task-created');
       window.dispatchEvent(event);
       
@@ -97,6 +94,20 @@ const Projects: React.FC = () => {
   };
 
   const selectedProjectData = getProjectById(selectedProject);
+
+  React.useEffect(() => {
+    const handleProjectUpdate = () => {
+      fetchProjects();
+    };
+
+    window.addEventListener('project-updated', handleProjectUpdate);
+    window.addEventListener('task-created', handleProjectUpdate);
+
+    return () => {
+      window.removeEventListener('project-updated', handleProjectUpdate);
+      window.removeEventListener('task-created', handleProjectUpdate);
+    };
+  }, []);
 
   return (
     <DashboardLayout>
@@ -129,7 +140,6 @@ const Projects: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Projects List - Left Column */}
           <div className="lg:col-span-1">
             <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple-dark">Your Projects</h2>
             
@@ -144,7 +154,6 @@ const Projects: React.FC = () => {
             </div>
           </div>
           
-          {/* Project Details & Tasks - Right Column */}
           <div className="lg:col-span-3 h-full">
             {selectedProjectData ? (
               <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
