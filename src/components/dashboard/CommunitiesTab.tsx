@@ -1,6 +1,9 @@
 
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface Community {
   community_id: string;
@@ -14,6 +17,12 @@ interface CommunitiesTabProps {
 }
 
 const CommunitiesTab = ({ communities, loading }: CommunitiesTabProps) => {
+  const navigate = useNavigate();
+  
+  const handleViewCommunities = () => {
+    navigate('/dashboard/communities');
+  };
+
   return (
     <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-soft-blue/20 border-soft-blue/10">
       <CardHeader>
@@ -37,10 +46,28 @@ const CommunitiesTab = ({ communities, loading }: CommunitiesTabProps) => {
                 </p>
               </div>
             ))}
+            {communities.length > 3 && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-2"
+                onClick={handleViewCommunities}
+              >
+                View All Communities
+              </Button>
+            )}
           </div>
         ) : (
           <div className="text-center py-4 text-muted-foreground">
-            No communities found
+            <p>No communities found</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="mt-4"
+              onClick={handleViewCommunities}
+            >
+              Explore Communities
+            </Button>
           </div>
         )}
       </CardContent>
