@@ -1,19 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import ProjectForm from '@/components/projects/ProjectForm';
 import ProjectList from '@/components/projects/ProjectList';
 import ProjectDetails from '@/components/projects/ProjectDetails';
 import EmptyProjectState from '@/components/projects/EmptyProjectState';
+import ProjectHeader from '@/components/projects/ProjectHeader';
+import TaskFormDialog from '@/components/projects/TaskFormDialog';
 import { useProjects } from '@/hooks/useProjects';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,13 +26,6 @@ const Projects: React.FC = () => {
 
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
-  
-  const [taskForm, setTaskForm] = useState({
-    title: '',
-    description: '',
-    deadline: '',
-    notes: ''
-  });
   const [isSubmittingTask, setIsSubmittingTask] = useState(false);
 
   const onSubmitProject = async (values: ProjectFormValues) => {
@@ -54,7 +39,6 @@ const Projects: React.FC = () => {
     if (!selectedProject || !values.title) return;
     
     setIsSubmittingTask(true);
-    
     try {
       const { data, error } = await supabase
         .from('tasks')
@@ -72,12 +56,6 @@ const Projects: React.FC = () => {
       
       toast.success('Task created successfully');
       setTaskDialogOpen(false);
-      setTaskForm({
-        title: '',
-        description: '',
-        deadline: '',
-        notes: ''
-      });
       
       const event = new CustomEvent('task-created');
       window.dispatchEvent(event);
@@ -96,7 +74,7 @@ const Projects: React.FC = () => {
 
   const selectedProjectData = getProjectById(selectedProject);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleProjectUpdate = () => {
       fetchProjects();
     };
@@ -113,32 +91,12 @@ const Projects: React.FC = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-collabCorner-purple to-collabCorner-purple-light bg-clip-text text-transparent">
-            Projects
-          </h1>
-          
-          <Dialog open={projectDialogOpen} onOpenChange={setProjectDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-collabCorner-purple hover:bg-collabCorner-purple-dark transition-colors">
-                <Plus className="mr-2 h-4 w-4" /> New Project
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[525px]">
-              <DialogHeader>
-                <DialogTitle>Create New Project</DialogTitle>
-                <DialogDescription>
-                  Add the details for your new project
-                </DialogDescription>
-              </DialogHeader>
-              
-              <ProjectForm 
-                onSubmit={onSubmitProject} 
-                isSubmitting={isCreating} 
-              />
-            </DialogContent>
-          </Dialog>
-        </div>
+        <ProjectHeader 
+          projectDialogOpen={projectDialogOpen}
+          setProjectDialogOpen={setProjectDialogOpen}
+          onSubmitProject={onSubmitProject}
+          isCreating={isCreating}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
@@ -157,29 +115,20 @@ const Projects: React.FC = () => {
           
           <div className="lg:col-span-3 h-full">
             {selectedProjectData ? (
-              <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
+              <>
                 <ProjectDetails 
                   project={selectedProjectData} 
                   onAddTask={() => setTaskDialogOpen(true)} 
                 />
-
-                <DialogContent className="sm:max-w-[525px]">
-                  <DialogHeader>
-                    <DialogTitle>Create New Task</DialogTitle>
-                    <DialogDescription>
-                      Add details for your new task
-                    </DialogDescription>
-                  </DialogHeader>
-                  
-                  {selectedProject && (
-                    <TaskForm 
-                      projectId={selectedProject}
-                      onSubmit={onSubmitTask}
-                      isSubmitting={isSubmittingTask}
-                    />
-                  )}
-                </DialogContent>
-              </Dialog>
+                
+                <TaskFormDialog
+                  open={taskDialogOpen}
+                  onOpenChange={setTaskDialogOpen}
+                  selectedProject={selectedProject}
+                  onSubmit={onSubmitTask}
+                  isSubmitting={isSubmittingTask}
+                />
+              </>
             ) : (
               <EmptyProjectState />
             )}
@@ -191,13 +140,3 @@ const Projects: React.FC = () => {
 };
 
 export default Projects;
-
-interface TaskFormProps {
-  projectId: string;
-  onSubmit: (values: any) => Promise<void>;
-  isSubmitting: boolean;
-}
-
-const TaskForm: React.FC<TaskFormProps> = ({ projectId, onSubmit, isSubmitting }) => {
-  return null;
-};
