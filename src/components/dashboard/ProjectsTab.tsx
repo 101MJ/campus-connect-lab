@@ -15,9 +15,9 @@ interface ProjectsTabProps {
 
 const ProjectsTab = ({ projects, loading }: ProjectsTabProps) => {
   return (
-    <Card>
+    <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-soft-purple/20 border-soft-purple/10">
       <CardHeader>
-        <CardTitle>Recent Projects</CardTitle>
+        <CardTitle className="text-collabCorner-purple">Recent Projects</CardTitle>
         <CardDescription>Projects you've created or joined</CardDescription>
       </CardHeader>
       <CardContent>
@@ -26,7 +26,10 @@ const ProjectsTab = ({ projects, loading }: ProjectsTabProps) => {
         ) : projects.length > 0 ? (
           <div className="space-y-4">
             {projects.slice(0, 3).map((project) => (
-              <div key={project.project_id} className="border-b pb-4 last:border-0">
+              <div 
+                key={project.project_id} 
+                className="p-3 bg-white rounded-lg hover:shadow-md transition-all hover:border-collabCorner-purple/20 border border-transparent"
+              >
                 <h3 className="font-semibold">{project.title}</h3>
                 <p className="text-sm text-muted-foreground">
                   {project.description?.substring(0, 100) || 'No description'}

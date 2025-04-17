@@ -275,7 +275,7 @@ const Projects = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Projects List - Left Column */}
-          <div className="lg:col-span-1 space-y-4">
+          <div className="lg:col-span-1 space-y-4 h-fit">
             <h2 className="text-lg font-semibold mb-2">Your Projects</h2>
             
             {isLoading ? (
@@ -328,7 +328,7 @@ const Projects = () => {
           </div>
           
           {/* Project Details & Tasks - Right Column */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 flex flex-col">
             {selectedProject ? (
               <>
                 <div className="mb-4">
@@ -381,8 +381,8 @@ const Projects = () => {
                   </Card>
                 </div>
                 
-                <div>
-                  <Tabs defaultValue="tasks">
+                <div className="flex-1">
+                  <Tabs defaultValue="tasks" className="h-full">
                     <TabsList className="mb-4">
                       <TabsTrigger value="tasks" className="data-[state=active]:bg-collabCorner-purple data-[state=active]:text-white">
                         <List className="h-4 w-4 mr-2" />
@@ -394,10 +394,10 @@ const Projects = () => {
                       </TabsTrigger>
                     </TabsList>
                     
-                    <TabsContent value="tasks">
+                    <TabsContent value="tasks" className="h-full">
                       <TaskList projectId={selectedProject} />
                     </TabsContent>
-                    <TabsContent value="completed">
+                    <TabsContent value="completed" className="h-full">
                       <Card>
                         <CardContent className="text-center py-4">
                           <p className="text-muted-foreground">

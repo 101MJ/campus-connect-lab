@@ -15,9 +15,9 @@ interface CommunitiesTabProps {
 
 const CommunitiesTab = ({ communities, loading }: CommunitiesTabProps) => {
   return (
-    <Card>
+    <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-soft-blue/20 border-soft-blue/10">
       <CardHeader>
-        <CardTitle>Communities</CardTitle>
+        <CardTitle className="text-collabCorner-purple">Communities</CardTitle>
         <CardDescription>Communities you're part of</CardDescription>
       </CardHeader>
       <CardContent>
@@ -26,7 +26,10 @@ const CommunitiesTab = ({ communities, loading }: CommunitiesTabProps) => {
         ) : communities.length > 0 ? (
           <div className="space-y-4">
             {communities.slice(0, 3).map((community) => (
-              <div key={community.community_id} className="border-b pb-4 last:border-0">
+              <div 
+                key={community.community_id} 
+                className="p-3 bg-white rounded-lg hover:shadow-md transition-all hover:border-collabCorner-purple/20 border border-transparent"
+              >
                 <h3 className="font-semibold">{community.name}</h3>
                 <p className="text-sm text-muted-foreground">
                   {community.description?.substring(0, 100) || 'No description'}
