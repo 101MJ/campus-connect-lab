@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { usePostReactions } from './usePostReactions';
 
 export interface Post {
   post_id: string;
@@ -13,62 +14,18 @@ export interface Post {
   community_id: string;
 }
 
-export interface RecentPost extends Post {
-  communityName?: string;
-}
-
 interface PostProfile {
   full_name: string | null;
-}
-
-export interface PostReaction {
-  likes: number;
-  dislikes: number;
-  userReaction?: string;
 }
 
 export const usePostList = (communityId: string) => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-  const [reactions, setReactions] = useState<Record<string, PostReaction>>({});
-
-  const fetchReactionsForPosts = async (postIds: string[]) => {
-    try {
-      const { data: reactionsData, error } = await supabase
-        .from('reactions')
-        .select('post_id, reaction_type, user_id')
-        .in('post_id', postIds);
-      
-      if (error) throw error;
-      
-      const reactionsMap: Record<string, PostReaction> = {};
-      postIds.forEach(postId => {
-        reactionsMap[postId] = { likes: 0, dislikes: 0 };
-      });
-      
-      if (reactionsData) {
-        reactionsData.forEach((reaction) => {
-          const postId = reaction.post_id;
-          if (postId) {
-            if (reaction.reaction_type === 'like') {
-              reactionsMap[postId].likes += 1;
-            } else if (reaction.reaction_type === 'dislike') {
-              reactionsMap[postId].dislikes += 1;
-            }
-          }
-        });
-      }
-      
-      setReactions(prev => ({ ...prev, ...reactionsMap }));
-    } catch (error) {
-      console.error('Error fetching reactions:', error);
-    }
-  };
+  const { reactions, setReactions, fetchReactionsForPosts } = usePostReactions();
 
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      // First fetch posts for the specific community
       let { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
@@ -84,27 +41,22 @@ export const usePostList = (communityId: string) => {
       
       if (postsError) throw postsError;
       
-      // Fetch profile information separately for each post
       if (postsData && postsData.length > 0) {
-        // Create a mapping of posts with properly typed profiles
         const postsWithProfiles: Post[] = [];
         
         for (const post of postsData) {
-          // Fetch author information
           const { data: profileData } = await supabase
             .from('profiles')
             .select('full_name')
             .eq('id', post.author_id)
             .single();
             
-          // Add post with profile to the array
           postsWithProfiles.push({
             ...post,
             profiles: profileData || { full_name: null }
           });
         }
 
-        // Fetch reactions for the posts
         const { data: reactionsData, error: reactionsError } = await supabase
           .from('reactions')
           .select('post_id, reaction_type')
@@ -114,7 +66,6 @@ export const usePostList = (communityId: string) => {
           console.error('Error fetching reactions:', reactionsError);
         }
 
-        // Calculate like counts for each post
         const likeCounts: Record<string, number> = {};
         reactionsData?.forEach(reaction => {
           if (reaction.reaction_type === 'like') {
@@ -122,7 +73,6 @@ export const usePostList = (communityId: string) => {
           }
         });
 
-        // Sort posts by likes if it's the main community feed
         const sortedPosts = postsWithProfiles.sort((a, b) => 
           (likeCounts[b.post_id] || 0) - (likeCounts[a.post_id] || 0)
         );

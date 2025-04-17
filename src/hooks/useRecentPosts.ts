@@ -1,8 +1,12 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { RecentPost } from './usePostList';
 import { Community } from './useCommunityManager';
+import { Post } from './usePostList';
+
+export interface RecentPost extends Post {
+  communityName?: string;
+}
 
 export const useRecentPosts = (userId?: string, joinedCommunities: Community[] = []) => {
   const [recentPosts, setRecentPosts] = useState<RecentPost[]>([]);
