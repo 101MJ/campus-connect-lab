@@ -26,6 +26,7 @@ export const usePostList = (communityId: string) => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
+      // Fetch all posts for this community
       let { data: postsData, error: postsError } = await supabase
         .from('posts')
         .select(`
@@ -44,12 +45,13 @@ export const usePostList = (communityId: string) => {
       if (postsData && postsData.length > 0) {
         const postsWithProfiles: Post[] = [];
         
+        // Get author information for each post
         for (const post of postsData) {
           const { data: profileData } = await supabase
             .from('profiles')
             .select('full_name')
             .eq('id', post.author_id)
-            .single();
+            .maybeSingle();
             
           postsWithProfiles.push({
             ...post,
@@ -57,6 +59,7 @@ export const usePostList = (communityId: string) => {
           });
         }
 
+        // Get reactions for sorting
         const { data: reactionsData, error: reactionsError } = await supabase
           .from('reactions')
           .select('post_id, reaction_type')
@@ -66,16 +69,30 @@ export const usePostList = (communityId: string) => {
           console.error('Error fetching reactions:', reactionsError);
         }
 
+        // Calculate like counts for each post
         const likeCounts: Record<string, number> = {};
+        const dislikeCounts: Record<string, number> = {};
+        
         reactionsData?.forEach(reaction => {
           if (reaction.reaction_type === 'like') {
             likeCounts[reaction.post_id] = (likeCounts[reaction.post_id] || 0) + 1;
+          } else if (reaction.reaction_type === 'dislike') {
+            dislikeCounts[reaction.post_id] = (dislikeCounts[reaction.post_id] || 0) + 1;
           }
         });
 
-        const sortedPosts = postsWithProfiles.sort((a, b) => 
-          (likeCounts[b.post_id] || 0) - (likeCounts[a.post_id] || 0)
-        );
+        // Sort posts by likes (more likes first) and then by date (newer first)
+        const sortedPosts = postsWithProfiles.sort((a, b) => {
+          const aLikes = likeCounts[a.post_id] || 0;
+          const bLikes = likeCounts[b.post_id] || 0;
+          
+          if (bLikes !== aLikes) {
+            return bLikes - aLikes; // Sort by likes
+          }
+          
+          // If likes are equal, sort by date
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
         
         setPosts(sortedPosts);
         await fetchReactionsForPosts(postsData.map(post => post.post_id));
@@ -166,6 +183,7 @@ export const usePostList = (communityId: string) => {
     posts,
     loading,
     reactions,
-    setReactions
+    setReactions,
+    fetchPosts
   };
 };

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -100,10 +101,27 @@ const Communities = () => {
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold mb-4">Latest Posts from Your Communities</h2>
-                <PostList 
-                  communityId={joinedCommunities[0].community_id} 
-                  isMember={true} 
-                />
+                {joinedCommunities.length > 0 && (
+                  <div className="space-y-6">
+                    {recentPosts.map(post => (
+                      <div 
+                        key={post.post_id} 
+                        className="cursor-pointer"
+                        onClick={() => handleViewCommunity(post.community_id)}
+                      >
+                        <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-blue-50">
+                          <CardContent className="p-4">
+                            <h3 className="font-semibold text-lg">{post.title}</h3>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {post.communityName && `From ${post.communityName}`}
+                            </p>
+                            <p className="mt-2 line-clamp-2">{post.content}</p>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           ) : (
