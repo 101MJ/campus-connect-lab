@@ -3,7 +3,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { Card, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FolderGit2 } from 'lucide-react';
+import { FolderGit2, Calendar, Trash2 } from 'lucide-react';
 
 interface Project {
   project_id: string;
@@ -43,7 +43,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 
   if (projects.length === 0) {
     return (
-      <Card className="border-dashed">
+      <Card className="border-dashed bg-gradient-to-br from-white to-soft-purple/10">
         <CardHeader className="pt-6 pb-6">
           <CardDescription className="text-center">
             No projects yet. Click "New Project" to get started.
@@ -53,13 +53,26 @@ const ProjectList: React.FC<ProjectListProps> = ({
     );
   }
 
+  // Generate a gradient color based on index
+  const getGradientColor = (index: number) => {
+    const colors = [
+      'from-soft-purple/20 to-soft-blue/10',
+      'from-soft-blue/20 to-soft-purple/10',
+      'from-white to-soft-purple/20',
+      'from-white to-soft-blue/20',
+    ];
+    return colors[index % colors.length];
+  };
+
   return (
-    <div className="space-y-2">
-      {projects.map((project) => (
+    <div className="space-y-3">
+      {projects.map((project, index) => (
         <Card 
           key={project.project_id} 
           className={`cursor-pointer transition-all hover:border-collabCorner-purple 
-                    ${selectedProject === project.project_id ? 'border-collabCorner-purple shadow-md bg-gradient-to-br from-white to-blue-50' : ''}`}
+                    ${selectedProject === project.project_id ? 
+                      'border-collabCorner-purple shadow-md bg-gradient-to-br from-white to-blue-50' : 
+                      `bg-gradient-to-br ${getGradientColor(index)}`}`}
           onClick={() => onSelectProject(project.project_id)}
         >
           <CardHeader className="p-4 pb-2">
@@ -67,11 +80,12 @@ const ProjectList: React.FC<ProjectListProps> = ({
               <div className="p-2 rounded-full bg-collabCorner-purple/10">
                 <FolderGit2 className="h-4 w-4 text-collabCorner-purple" />
               </div>
-              {project.title}
+              <span className="text-collabCorner-purple-dark">{project.title}</span>
             </CardTitle>
           </CardHeader>
           <CardFooter className="p-2 pt-0 flex justify-between">
-            <CardDescription className="text-xs">
+            <CardDescription className="text-xs flex items-center">
+              <Calendar className="h-3 w-3 mr-1 text-collabCorner-purple-light" />
               {formatDate(project.deadline)}
             </CardDescription>
             <Button 
@@ -83,6 +97,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
               }}
               className="h-6 px-2 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
             >
+              <Trash2 className="h-3 w-3 mr-1" />
               Delete
             </Button>
           </CardFooter>

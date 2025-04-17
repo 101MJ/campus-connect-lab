@@ -82,20 +82,22 @@ const Projects: React.FC = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Projects List - Left Column */}
-          <div className="lg:col-span-1 space-y-4 h-fit">
-            <h2 className="text-lg font-semibold mb-2">Your Projects</h2>
+          <div className="lg:col-span-1">
+            <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple-dark">Your Projects</h2>
             
-            <ProjectList
-              projects={projects}
-              selectedProject={selectedProject}
-              isLoading={isLoading}
-              onSelectProject={handleProjectClick}
-              onDeleteProject={deleteProject}
-            />
+            <div className="sticky top-6">
+              <ProjectList
+                projects={projects}
+                selectedProject={selectedProject}
+                isLoading={isLoading}
+                onSelectProject={handleProjectClick}
+                onDeleteProject={deleteProject}
+              />
+            </div>
           </div>
           
           {/* Project Details & Tasks - Right Column */}
-          <div className="lg:col-span-3 flex flex-col">
+          <div className="lg:col-span-3 h-full">
             {selectedProjectData ? (
               <Dialog open={taskDialogOpen} onOpenChange={setTaskDialogOpen}>
                 <ProjectDetails 
