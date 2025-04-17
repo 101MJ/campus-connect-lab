@@ -61,6 +61,8 @@ const Communities = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('all');
   const [selectedCommunity, setSelectedCommunity] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCommunities, setFilteredCommunities] = useState<Community[]>([]);
 
   const form = useForm<CommunityFormValues>({
     resolver: zodResolver(communitySchema),
@@ -286,6 +288,20 @@ const Communities = () => {
     setSelectedCommunity(null);
   };
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
+      setFilteredCommunities([]);
+      return;
+    }
+
+    const filtered = communities.filter(community => 
+      community.name.toLowerCase().includes(query.toLowerCase()) ||
+      (community.description?.toLowerCase() || '').includes(query.toLowerCase())
+    );
+    setFilteredCommunities(filtered);
+  };
+
   if (selectedCommunity) {
     return (
       <DashboardLayout>
@@ -365,7 +381,31 @@ const Communities = () => {
             </Dialog>
           </div>
 
-          {activeTab === 'all' && joinedCommunities.length > 0 ? (
+          {searchQuery && filteredCommunities.length > 0 && (
+            <Card>
+              <CardContent className="p-6">
+                <h2 className="text-xl font-semibold mb-4">Search Results</h2>
+                <div className="space-y-4">
+                  {filteredCommunities.map((community) => (
+                    <div 
+                      key={community.community_id} 
+                      className="p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => handleViewCommunity(community.community_id)}
+                    >
+                      <h3 className="font-semibold">{community.name}</h3>
+                      {community.description && (
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {community.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {!searchQuery && (activeTab === 'all' && joinedCommunities.length > 0 ? (
             <Card>
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold mb-4">Latest Posts from Your Communities</h2>
@@ -406,7 +446,7 @@ const Communities = () => {
                 Create New Community
               </Button>
             </div>
-          )}
+          ))}
         </div>
 
         <CommunitySidebar 
@@ -414,11 +454,11 @@ const Communities = () => {
           joinedCommunities={joinedCommunities}
           allCommunities={communities}
           recentPosts={recentPosts}
-          recommendedCommunities={recommendedCommunities}
           loading={isLoading}
           activeTab={activeTab}
           onTabChange={setActiveTab}
           onViewCommunity={handleViewCommunity}
+          onSearch={handleSearch}
         />
       </div>
     </DashboardLayout>
