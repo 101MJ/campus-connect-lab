@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -6,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Clock, Search, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { RecentPost } from '@/hooks/usePostList';
+import { RecentPost } from '@/hooks/useRecentPosts';
 
 interface Community {
   community_id: string;

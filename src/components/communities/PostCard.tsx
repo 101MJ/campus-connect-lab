@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { MessageSquare, User } from 'lucide-react';
@@ -6,7 +5,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Button } from '@/components/ui/button';
 import PostComments from './PostComments';
 import PostReaction from './PostReaction';
-import type { Post, PostReaction as PostReactionType } from '@/hooks/usePostList';
+import type { Post } from '@/hooks/usePostList';
+import type { PostReaction as PostReactionType } from '@/hooks/usePostReactions';
 
 interface PostCardProps {
   post: Post;

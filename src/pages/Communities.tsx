@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -10,7 +9,7 @@ import CommunitySidebar from '@/components/communities/CommunitySidebar';
 import CreateCommunityDialog from '@/components/communities/CreateCommunityDialog';
 import EmptyCommunityState from '@/components/communities/EmptyCommunityState';
 import { useCommunityManager } from '@/hooks/useCommunityManager';
-import { useRecentPosts } from '@/hooks/usePostList';
+import { useRecentPosts } from '@/hooks/useRecentPosts';
 
 const Communities = () => {
   const { user } = useAuth();
