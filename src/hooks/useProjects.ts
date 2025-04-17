@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { ProjectFormValues } from '@/components/projects/ProjectForm';
 
 interface Project {
   project_id: string;
@@ -11,12 +12,6 @@ interface Project {
   deadline?: string;
   created_at: string;
   created_by: string;
-}
-
-interface ProjectFormValues {
-  title: string;
-  description?: string;
-  deadline?: string;
 }
 
 export const useProjects = () => {
