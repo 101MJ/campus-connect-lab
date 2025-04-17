@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -68,8 +67,8 @@ export const usePostList = (communityId: string) => {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      // First fetch posts
-      const { data: postsData, error: postsError } = await supabase
+      // First fetch user's joined and owned community IDs to filter posts
+      let postQuery = supabase
         .from('posts')
         .select(`
           post_id,
@@ -77,40 +76,43 @@ export const usePostList = (communityId: string) => {
           content,
           created_at,
           author_id,
-          community_id
+          community_id,
+          profiles (
+            full_name
+          )
         `)
         .eq('community_id', communityId)
         .order('created_at', { ascending: false });
+
+      const { data: postsData, error: postsError } = await postQuery;
       
       if (postsError) throw postsError;
 
-      // Then fetch profiles separately
+      // Then fetch reactions for the posts to calculate like counts
       if (postsData && postsData.length > 0) {
-        const authorIds = postsData.map(post => post.author_id);
-        
-        const { data: profilesData, error: profilesError } = await supabase
-          .from('profiles')
-          .select('id, full_name')
-          .in('id', authorIds);
+        const { data: reactionsData, error: reactionsError } = await supabase
+          .from('reactions')
+          .select('post_id, reaction_type')
+          .in('post_id', postsData.map(post => post.post_id));
           
-        if (profilesError) {
-          console.error('Error fetching profiles:', profilesError);
+        if (reactionsError) {
+          console.error('Error fetching reactions:', reactionsError);
         }
+
+        // Calculate like counts for each post
+        const likeCounts: Record<string, number> = {};
+        reactionsData?.forEach(reaction => {
+          if (reaction.reaction_type === 'like') {
+            likeCounts[reaction.post_id] = (likeCounts[reaction.post_id] || 0) + 1;
+          }
+        });
+
+        // Sort posts by likes if it's the main community feed
+        const sortedPosts = postsData.sort((a, b) => 
+          (likeCounts[b.post_id] || 0) - (likeCounts[a.post_id] || 0)
+        );
         
-        // Map profiles to posts
-        const profilesMap = profilesData ? profilesData.reduce((acc, profile) => {
-          acc[profile.id] = { full_name: profile.full_name };
-          return acc;
-        }, {} as Record<string, PostProfile>) : {};
-        
-        const postsWithProfiles = postsData.map(post => ({
-          ...post,
-          profiles: profilesMap[post.author_id] || { full_name: null }
-        }));
-        
-        setPosts(postsWithProfiles);
-        
-        // Fetch reactions
+        setPosts(sortedPosts);
         await fetchReactionsForPosts(postsData.map(post => post.post_id));
       } else {
         setPosts([]);

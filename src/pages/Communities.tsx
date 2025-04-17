@@ -133,34 +133,80 @@ const Communities = () => {
 
   const fetchRecentPosts = async () => {
     try {
-      const { data: recentPostsData, error } = await supabase
+      const { data: memberships } = await supabase
+        .from('community_members')
+        .select('community_id')
+        .eq('user_id', user!.id);
+        
+      const userCommunityIds = memberships?.map(m => m.community_id) || [];
+
+      const { data: userCommunityPosts, error: userPostsError } = await supabase
         .from('posts')
         .select(`
           post_id,
           title,
-          created_at,
-          community_id,
-          communities (name),
           content,
-          author_id
+          created_at,
+          author_id,
+          community_id,
+          communities (name)
         `)
-        .order('created_at', { ascending: false })
-        .limit(10);
-        
-      if (error) throw error;
-      
-      const formattedPosts: RecentPost[] = (recentPostsData || []).map(post => ({
-        post_id: post.post_id,
-        title: post.title,
-        created_at: post.created_at,
-        community_id: post.community_id,
-        communityName: post.communities?.name,
-        author_id: post.author_id,
-        content: post.content
+        .in('community_id', userCommunityIds)
+        .order('created_at', { ascending: false });
+
+      const { data: allPosts, error: allPostsError } = await supabase
+        .from('posts')
+        .select(`
+          post_id,
+          title,
+          content,
+          created_at,
+          author_id,
+          community_id,
+          communities (name)
+        `)
+        .not('community_id', 'in', userCommunityIds)
+        .order('created_at', { ascending: false });
+
+      if (userPostsError || allPostsError) throw userPostsError || allPostsError;
+
+      const allPostIds = [...(userCommunityPosts || []), ...(allPosts || [])].map(p => p.post_id);
+      const { data: reactions } = await supabase
+        .from('reactions')
+        .select('post_id, reaction_type')
+        .in('post_id', allPostIds)
+        .eq('reaction_type', 'like');
+
+      const likeCounts: Record<string, number> = {};
+      reactions?.forEach(reaction => {
+        likeCounts[reaction.post_id] = (likeCounts[reaction.post_id] || 0) + 1;
+      });
+
+      const userPosts = (userCommunityPosts || []).map(post => ({
+        ...post,
+        likeCount: likeCounts[post.post_id] || 0
       }));
-      
+
+      const topOtherPosts = (allPosts || [])
+        .map(post => ({
+          ...post,
+          likeCount: likeCounts[post.post_id] || 0
+        }))
+        .sort((a, b) => b.likeCount - a.likeCount)
+        .slice(0, 5);
+
+      const formattedPosts: RecentPost[] = [...userPosts, ...topOtherPosts]
+        .map(post => ({
+          post_id: post.post_id,
+          title: post.title,
+          content: post.content,
+          created_at: post.created_at,
+          community_id: post.community_id,
+          communityName: post.communities?.name,
+          author_id: post.author_id
+        }));
+
       setRecentPosts(formattedPosts);
-      
     } catch (error: any) {
       console.error('Error fetching recent posts:', error);
     }
