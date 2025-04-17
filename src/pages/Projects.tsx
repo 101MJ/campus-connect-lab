@@ -28,7 +28,8 @@ const Projects: React.FC = () => {
     setSelectedProject,
     createProject,
     deleteProject,
-    getProjectById
+    getProjectById,
+    fetchProjects
   } = useProjects();
 
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
@@ -107,7 +108,7 @@ const Projects: React.FC = () => {
       window.removeEventListener('project-updated', handleProjectUpdate);
       window.removeEventListener('task-created', handleProjectUpdate);
     };
-  }, []);
+  }, [fetchProjects]);
 
   return (
     <DashboardLayout>

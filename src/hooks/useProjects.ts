@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -21,13 +21,7 @@ export const useProjects = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   
-  useEffect(() => {
-    if (user) {
-      fetchProjects();
-    }
-  }, [user]);
-
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     if (!user) return;
     
     setIsLoading(true);
@@ -46,7 +40,13 @@ export const useProjects = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchProjects();
+    }
+  }, [user, fetchProjects]);
 
   const createProject = async (values: ProjectFormValues) => {
     if (!user) return;
@@ -114,6 +114,7 @@ export const useProjects = () => {
     setSelectedProject,
     createProject,
     deleteProject,
-    getProjectById
+    getProjectById,
+    fetchProjects
   };
 };
