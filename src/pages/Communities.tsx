@@ -206,7 +206,9 @@ const Communities = () => {
           community_id: post.community_id,
           communityName: post.communities?.name,
           author_id: post.author_id
-        }));
+        }))
+        .sort((a, b) => likeCounts[b.post_id] - likeCounts[a.post_id])
+        .slice(0, 10);
 
       setRecentPosts(formattedPosts);
     } catch (error: any) {
@@ -452,11 +454,8 @@ const Communities = () => {
         <CommunitySidebar 
           myCommunities={myCommunities}
           joinedCommunities={joinedCommunities}
-          allCommunities={communities}
           recentPosts={recentPosts}
           loading={isLoading}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
           onViewCommunity={handleViewCommunity}
           onSearch={handleSearch}
         />
