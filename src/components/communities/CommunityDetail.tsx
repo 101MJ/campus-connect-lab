@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +8,8 @@ import CreatePost from './CreatePost';
 import DeleteCommunityDialog from './DeleteCommunityDialog';
 import CommunityHeader from './CommunityHeader';
 import CommunityMembershipActions from './CommunityMembershipActions';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 interface CommunityDetailProps {
   communityId: string;
