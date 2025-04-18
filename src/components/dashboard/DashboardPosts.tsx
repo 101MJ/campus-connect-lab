@@ -8,20 +8,26 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { Clock } from 'lucide-react';
+import PostCard from '@/components/communities/PostCard';
+import { usePostReactions } from '@/hooks/usePostReactions';
 
 const DashboardPosts = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { joinedCommunities } = useCommunityManager();
   const { recentPosts, loading } = useRecentPosts(user?.id, joinedCommunities);
+  const { reactions, setReactions } = usePostReactions();
 
   // Sort posts by date in descending order
   const sortedPosts = [...recentPosts].sort((a, b) => 
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
-  const handleViewCommunity = (communityId: string) => {
-    navigate(`/dashboard/communities?community=${communityId}`);
+  const handleReactionUpdate = (postId: string, updatedReaction: any) => {
+    setReactions(prev => ({
+      ...prev,
+      [postId]: updatedReaction
+    }));
   };
 
   if (!user) return null;
@@ -38,24 +44,15 @@ const DashboardPosts = () => {
         {loading ? (
           <div className="text-center py-4">Loading posts...</div>
         ) : sortedPosts.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {sortedPosts.map(post => (
-              <div 
+              <PostCard
                 key={post.post_id}
-                onClick={() => handleViewCommunity(post.community_id)}
-                className="cursor-pointer"
-              >
-                <Card className="overflow-hidden hover:shadow-md transition-all duration-300">
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-lg">{post.title}</h3>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {post.communityName && `From ${post.communityName} • `}
-                      {format(new Date(post.created_at), 'MMM d, yyyy, h:mm a')}
-                    </p>
-                    <p className="mt-2 line-clamp-2">{post.content}</p>
-                  </CardContent>
-                </Card>
-              </div>
+                post={post}
+                reaction={reactions[post.post_id] || { likes: 0, dislikes: 0 }}
+                isMember={true}
+                onReactionUpdate={handleReactionUpdate}
+              />
             ))}
           </div>
         ) : (
