@@ -7,16 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-
-interface TaskFormProps {
-  projectId: string;
-  onSubmit: (values: any) => Promise<void>;
-  isSubmitting: boolean;
-}
-
-const TaskForm: React.FC<TaskFormProps> = ({ projectId, onSubmit, isSubmitting }) => {
-  return null; // This is already implemented elsewhere and imported
-};
+import TaskForm from '@/components/tasks/TaskForm';
 
 interface TaskFormDialogProps {
   open: boolean;

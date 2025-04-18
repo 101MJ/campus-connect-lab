@@ -8,9 +8,11 @@ import ProjectHeader from '@/components/projects/ProjectHeader';
 import TaskFormDialog from '@/components/projects/TaskFormDialog';
 import { useProjects } from '@/hooks/useProjects';
 import { useTaskManagement } from '@/hooks/useTaskManagement';
+import { useAuth } from '@/contexts/AuthContext';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
 
 const Projects: React.FC = () => {
+  const { user } = useAuth();
   const {
     projects,
     isLoading,
@@ -35,12 +37,9 @@ const Projects: React.FC = () => {
   };
 
   const onSubmitTask = async (values: any) => {
-    if (!selectedProject) return;
+    if (!selectedProject || !user) return;
     
-    const selectedProjectData = getProjectById(selectedProject);
-    if (!selectedProjectData) return;
-
-    const success = await createTask(values, selectedProject, selectedProjectData.created_by);
+    const success = await createTask(values, selectedProject, user.id);
     if (success) {
       setTaskDialogOpen(false);
     }
