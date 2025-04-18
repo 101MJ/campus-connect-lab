@@ -1,9 +1,8 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Plus, List, CheckSquare, Pencil } from 'lucide-react';
+import { Plus, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TaskList from '@/components/tasks/TaskList';
 import {
   Dialog,
@@ -13,8 +12,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import EditProjectForm from './EditProjectForm';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
 
 export interface Project {
   project_id: string;
@@ -59,7 +56,6 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask }) =
       toast.success('Project updated successfully');
       setEditDialogOpen(false);
       
-      // Force refresh of the project page
       const event = new CustomEvent('project-updated');
       window.dispatchEvent(event);
     } catch (error: any) {
@@ -118,26 +114,20 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask }) =
         </Card>
       </div>
       
-      <div className="flex-1">
-        <Tabs defaultValue="tasks" className="h-full">
-          <TabsList className="mb-4">
-            <TabsTrigger value="tasks" className="data-[state=active]:bg-collabCorner-purple data-[state=active]:text-white">
-              <List className="h-4 w-4 mr-2" />
-              Tasks
-            </TabsTrigger>
-            <TabsTrigger value="completed" className="data-[state=active]:bg-collabCorner-purple data-[state=active]:text-white">
-              <CheckSquare className="h-4 w-4 mr-2" />
-              Completed
-            </TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="tasks" className="h-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple">Pending Tasks</h2>
+          <div className="bg-white rounded-lg p-4">
             <TaskList projectId={project.project_id} showCompleted={false} />
-          </TabsContent>
-          <TabsContent value="completed" className="h-full">
+          </div>
+        </div>
+        
+        <div>
+          <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple">Completed Tasks</h2>
+          <div className="bg-white rounded-lg p-4">
             <TaskList projectId={project.project_id} showCompleted={true} />
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </div>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
