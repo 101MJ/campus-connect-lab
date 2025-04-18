@@ -1,22 +1,13 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Trash2, CalendarDays, Edit } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { Task } from '@/types/task';
 
 interface TaskItemProps {
-  task: {
-    task_id: string;
-    title: string;
-    description: string | null;
-    deadline: string | null;
-    notes: string | null;
-    is_completed: boolean;
-  };
+  task: Task;
   onDelete: (taskId: string) => void;
   onStatusChange: (taskId: string, isCompleted: boolean) => void;
   onEdit: (taskId: string) => void;

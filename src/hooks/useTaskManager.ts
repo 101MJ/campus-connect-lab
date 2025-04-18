@@ -2,15 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-interface Task {
-  task_id: string;
-  title: string;
-  description: string | null;
-  deadline: string | null;
-  notes: string | null;
-  is_completed: boolean;
-}
+import { Task } from '@/types/task';
 
 export function useTaskManager(projectId: string | null, showCompleted: boolean = false) {
   const [tasks, setTasks] = useState<Task[]>([]);

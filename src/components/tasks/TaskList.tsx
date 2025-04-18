@@ -5,6 +5,7 @@ import TaskItem from './TaskItem';
 import TaskEditDialog from './TaskEditDialog';
 import EmptyTaskState from './EmptyTaskState';
 import { useTaskManager } from '@/hooks/useTaskManager';
+import { Task } from '@/types/task';
 
 interface TaskListProps {
   projectId: string | null;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -21,6 +20,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import { Task } from '@/types/task';
 
 const taskSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
@@ -34,13 +34,7 @@ type TaskFormValues = z.infer<typeof taskSchema>;
 interface TaskEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  task: {
-    task_id: string;
-    title: string;
-    description: string | null;
-    deadline: string | null;
-    notes: string | null;
-  } | null;
+  task: Task | null;
   onSubmit: (taskId: string, values: TaskFormValues) => Promise<void>;
   isSubmitting: boolean;
 }
@@ -62,7 +56,6 @@ const TaskEditDialog: React.FC<TaskEditDialogProps> = ({
     },
   });
 
-  // Reset form when task changes
   React.useEffect(() => {
     if (task) {
       form.reset({
