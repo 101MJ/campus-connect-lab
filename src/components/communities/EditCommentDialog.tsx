@@ -19,7 +19,7 @@ interface EditCommentDialogProps {
     content: string;
     author_id: string;
   };
-  onCommentUpdated: () => void;
+  onCommentUpdated: () => void; // This should expect no arguments
 }
 
 const EditCommentDialog: React.FC<EditCommentDialogProps> = ({ comment, onCommentUpdated }) => {

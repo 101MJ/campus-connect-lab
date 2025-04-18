@@ -99,6 +99,11 @@ const CommentCard: React.FC<CommentCardProps> = ({
     }
   };
 
+  // Create an adapter function to match the expected signature
+  const handleCommentUpdated = () => {
+    onDeleteComment(comment.comment_id);
+  };
+
   return (
     <div className="pb-3">
       <div className="flex justify-between text-sm">
@@ -111,7 +116,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
             <div className="flex items-center gap-1">
               <EditCommentDialog 
                 comment={comment} 
-                onCommentUpdated={onDeleteComment} 
+                onCommentUpdated={handleCommentUpdated} 
               />
               <Button
                 variant="ghost"
