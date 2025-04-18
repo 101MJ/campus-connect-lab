@@ -1,6 +1,7 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface PostReaction {
   likes: number;
@@ -9,9 +10,12 @@ export interface PostReaction {
 }
 
 export const usePostReactions = () => {
+  const { user } = useAuth();
   const [reactions, setReactions] = useState<Record<string, PostReaction>>({});
 
   const fetchReactionsForPosts = async (postIds: string[]) => {
+    if (!postIds.length) return;
+    
     try {
       const { data: reactionsData, error } = await supabase
         .from('reactions')
@@ -26,13 +30,19 @@ export const usePostReactions = () => {
       });
       
       if (reactionsData) {
+        // Count likes and dislikes
         reactionsData.forEach((reaction) => {
           const postId = reaction.post_id;
           if (postId) {
             if (reaction.reaction_type === 'like') {
-              reactionsMap[postId].likes += 1;
+              reactionsMap[postId].likes = (reactionsMap[postId].likes || 0) + 1;
             } else if (reaction.reaction_type === 'dislike') {
-              reactionsMap[postId].dislikes += 1;
+              reactionsMap[postId].dislikes = (reactionsMap[postId].dislikes || 0) + 1;
+            }
+            
+            // Track the current user's reaction
+            if (user && reaction.user_id === user.id) {
+              reactionsMap[postId].userReaction = reaction.reaction_type;
             }
           }
         });

@@ -21,6 +21,7 @@ const PostReaction: React.FC<PostReactionProps> = ({
   onReactionUpdate,
 }) => {
   const { user } = useAuth();
+  const [isProcessing, setIsProcessing] = React.useState(false);
 
   const handleReaction = async (reactionType: string) => {
     if (!user) {
@@ -33,6 +34,11 @@ const PostReaction: React.FC<PostReactionProps> = ({
       return;
     }
     
+    if (isProcessing) {
+      return; // Prevent multiple clicks while processing
+    }
+    
+    setIsProcessing(true);
     const currentReaction = reaction.userReaction;
     
     try {
@@ -55,8 +61,9 @@ const PostReaction: React.FC<PostReactionProps> = ({
           userReaction: undefined
         };
       } else {
-        // Remove previous reaction if exists
+        // Handle switching reaction type
         if (currentReaction) {
+          // Delete existing reaction first
           const { error: deleteError } = await supabase
             .from('reactions')
             .delete()
@@ -70,6 +77,9 @@ const PostReaction: React.FC<PostReactionProps> = ({
             [currentReaction === 'like' ? 'likes' : 'dislikes']: 
               Math.max(0, reaction[currentReaction === 'like' ? 'likes' : 'dislikes'] - 1)
           };
+          
+          // Small delay to ensure the delete completes before insert
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
         
         // Add new reaction
@@ -81,7 +91,10 @@ const PostReaction: React.FC<PostReactionProps> = ({
             reaction_type: reactionType
           });
           
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          throw insertError;
+        }
         
         updatedReaction = {
           ...updatedReaction,
@@ -95,6 +108,8 @@ const PostReaction: React.FC<PostReactionProps> = ({
     } catch (error: any) {
       console.error('Error handling reaction:', error);
       toast.error('Failed to update reaction');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -103,9 +118,9 @@ const PostReaction: React.FC<PostReactionProps> = ({
       <Button 
         variant="ghost" 
         size="sm"
-        className={reaction.userReaction === 'like' ? 'text-green-600' : ''}
+        className={`${reaction.userReaction === 'like' ? 'text-green-600' : ''}`}
         onClick={() => handleReaction('like')}
-        disabled={!user || !isMember}
+        disabled={!user || !isMember || isProcessing}
       >
         <ThumbsUp className="h-4 w-4 mr-1" />
         {reaction.likes || 0}
@@ -113,9 +128,9 @@ const PostReaction: React.FC<PostReactionProps> = ({
       <Button 
         variant="ghost" 
         size="sm"
-        className={reaction.userReaction === 'dislike' ? 'text-red-600' : ''}
+        className={`${reaction.userReaction === 'dislike' ? 'text-red-600' : ''}`}
         onClick={() => handleReaction('dislike')}
-        disabled={!user || !isMember}
+        disabled={!user || !isMember || isProcessing}
       >
         <ThumbsDown className="h-4 w-4 mr-1" />
         {reaction.dislikes || 0}
