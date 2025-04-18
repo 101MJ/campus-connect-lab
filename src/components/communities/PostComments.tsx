@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -6,7 +5,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { ThumbsUp, ThumbsDown, Send } from 'lucide-react';
+import { ThumbsUp, ThumbsDown, Send, Trash2 } from 'lucide-react';
 
 interface PostCommentsProps {
   postId: string;
@@ -28,6 +27,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeletingComment, setIsDeletingComment] = useState<string | null>(null);
 
   useEffect(() => {
     if (postId) {
@@ -38,7 +38,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
   const fetchComments = async () => {
     setIsLoading(true);
     try {
-      // First fetch comments
       const { data: commentsData, error: commentsError } = await supabase
         .from('comments')
         .select(`
@@ -53,7 +52,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
       if (commentsError) throw commentsError;
       
       if (commentsData && commentsData.length > 0) {
-        // Then fetch profiles separately
         const authorIds = commentsData.map(comment => comment.author_id);
         
         const { data: profilesData, error: profilesError } = await supabase
@@ -65,7 +63,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
           console.error('Error fetching profiles:', profilesError);
         }
         
-        // Map author names to comments
         const profilesMap = profilesData ? profilesData.reduce((acc, profile) => {
           acc[profile.id] = profile.full_name;
           return acc;
@@ -78,7 +75,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
         
         setComments(commentsWithNames);
         
-        // Get reactions for these comments
         await fetchReactionsForComments(commentsData.map(comment => comment.comment_id));
       } else {
         setComments([]);
@@ -100,7 +96,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
       
       if (error) throw error;
       
-      // Calculate likes and dislikes for each comment
       const reactionsMap: Record<string, {likes: number, dislikes: number, userReaction?: string}> = {};
       
       commentIds.forEach(commentId => {
@@ -117,7 +112,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
               reactionsMap[commentId].dislikes += 1;
             }
             
-            // Mark user's reaction
             if (user && reaction.user_id === user.id) {
               reactionsMap[commentId].userReaction = reaction.reaction_type;
             }
@@ -161,7 +155,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
       if (error) throw error;
       
       if (data && data.length > 0) {
-        // Get author name from profiles
         const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .select('full_name')
@@ -182,7 +175,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
         setComments(prev => [...prev, newCommentWithAuthor]);
         setNewComment('');
         
-        // Initialize reaction state for new comment
         setReactions(prev => ({
           ...prev,
           [data[0].comment_id]: { likes: 0, dislikes: 0 }
@@ -211,7 +203,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
     
     try {
       if (currentReaction === reactionType) {
-        // User is removing their reaction
         const { error } = await supabase
           .from('reactions')
           .delete()
@@ -220,7 +211,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
           
         if (error) throw error;
         
-        // Update local state
         setReactions(prev => {
           const updated = { ...prev };
           if (reactionType === 'like') {
@@ -240,9 +230,7 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
         });
         
       } else {
-        // User is adding or changing reaction
         if (currentReaction) {
-          // First remove the existing reaction
           const { error } = await supabase
             .from('reactions')
             .delete()
@@ -251,7 +239,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
             
           if (error) throw error;
           
-          // Update local state to remove old reaction
           setReactions(prev => {
             const updated = { ...prev };
             if (currentReaction === 'like') {
@@ -263,7 +250,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
           });
         }
         
-        // Add the new reaction
         const { error } = await supabase
           .from('reactions')
           .insert({
@@ -274,7 +260,6 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
           
         if (error) throw error;
         
-        // Update local state to add new reaction
         setReactions(prev => {
           const updated = { ...prev };
           if (reactionType === 'like') {
@@ -296,6 +281,33 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
     } catch (error: any) {
       console.error('Error handling reaction:', error);
       toast.error('Failed to update reaction');
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user || isDeletingComment) return;
+    
+    if (!window.confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeletingComment(commentId);
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('comment_id', commentId)
+        .eq('author_id', user.id);
+      
+      if (error) throw error;
+      
+      setComments(prev => prev.filter(c => c.comment_id !== commentId));
+      toast.success('Comment deleted successfully');
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      toast.error('Failed to delete comment');
+    } finally {
+      setIsDeletingComment(null);
     }
   };
 
@@ -336,9 +348,22 @@ const PostComments: React.FC<PostCommentsProps> = ({ postId, isMember }) => {
             <div key={comment.comment_id} className="pb-3">
               <div className="flex justify-between text-sm">
                 <span className="font-medium">{comment.author_name}</span>
-                <span className="text-muted-foreground">
-                  {format(new Date(comment.created_at), 'MMM d, yyyy')}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">
+                    {format(new Date(comment.created_at), 'MMM d, yyyy')}
+                  </span>
+                  {user?.id === comment.author_id && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50"
+                      onClick={() => handleDeleteComment(comment.comment_id)}
+                      disabled={isDeletingComment === comment.comment_id}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
               </div>
               <p className="my-1">{comment.content}</p>
               <div className="flex items-center gap-4 mt-2">

@@ -32,6 +32,11 @@ const CommunitySidebar = ({
 }: CommunitySidebarProps) => {
   const navigate = useNavigate();
 
+  // Sort posts by date in descending order
+  const sortedPosts = [...recentPosts].sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
   return (
     <aside className="hidden md:block w-80 space-y-6 pl-6">
       {/* Search Bar */}
@@ -119,8 +124,8 @@ const CommunitySidebar = ({
                 <Skeleton className="h-3 w-2/3" />
               </div>
             ))
-          ) : recentPosts.length > 0 ? (
-            recentPosts.map(post => (
+          ) : sortedPosts.length > 0 ? (
+            sortedPosts.map(post => (
               <div 
                 key={post.post_id} 
                 className="py-2 cursor-pointer hover:text-collabCorner-purple"
