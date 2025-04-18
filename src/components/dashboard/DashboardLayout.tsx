@@ -1,39 +1,61 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardSidebar from './DashboardSidebar';
+import { Loader2 } from 'lucide-react';
 
 const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
   
+  // Set up loading timeout
+  useEffect(() => {
+    if (loading) {
+      const timeout = setTimeout(() => {
+        console.error('Authentication check timeout');
+        navigate('/signin', { 
+          replace: true,
+          state: { from: location.pathname }
+        });
+      }, 10000); // 10 second timeout
+      
+      setLoadingTimeout(timeout);
+      
+      return () => {
+        if (timeout) clearTimeout(timeout);
+      };
+    }
+    
+    return () => {
+      if (loadingTimeout) clearTimeout(loadingTimeout);
+    };
+  }, [loading, navigate, location.pathname]);
+
   // Redirect to sign in if not authenticated
   useEffect(() => {
-    if (!loading && !user) {
-      // Save the current path before redirecting
-      if (location.pathname !== '/signin') {
-        localStorage.setItem('lastVisitedPath', location.pathname);
+    if (!loading) {
+      if (loadingTimeout) clearTimeout(loadingTimeout);
+      
+      if (!user) {
+        // Save the current path before redirecting
+        if (location.pathname !== '/signin') {
+          localStorage.setItem('lastVisitedPath', location.pathname);
+        }
+        navigate('/signin', { 
+          replace: true,
+          state: { from: location.pathname }
+        });
       }
-      navigate('/signin');
     }
   }, [user, loading, navigate, location.pathname]);
-
-  // After successful authentication, redirect to the last visited path
-  useEffect(() => {
-    if (user && location.pathname === '/dashboard') {
-      const lastPath = localStorage.getItem('lastVisitedPath');
-      if (lastPath && lastPath !== '/signin' && lastPath !== '/signup') {
-        navigate(lastPath);
-      }
-    }
-  }, [user, navigate, location.pathname]);
 
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <Loader2 className="h-8 w-8 animate-spin text-collabCorner-purple" />
       </div>
     );
   }

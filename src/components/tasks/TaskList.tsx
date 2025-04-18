@@ -1,9 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import TaskItem from './TaskItem';
 import TaskEditDialog from './TaskEditDialog';
+import { Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Task {
   task_id: string;
@@ -26,69 +27,94 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, showCompleted = false, o
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (projectId) {
-      fetchTasks();
-    } else {
-      setTasks([]);
-    }
+    if (!projectId) return;
 
-    // Set up real-time subscription for task updates
-    let subscription: any;
-    
-    if (projectId) {
-      subscription = supabase
-        .channel('tasks-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'tasks',
-            filter: `project_id=eq.${projectId}`
-          },
-          (payload) => {
-            // Refresh tasks when a change is detected
-            fetchTasks();
+    const channel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks',
+          filter: `project_id=eq.${projectId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newTask = payload.new as Task;
+            if (newTask.is_completed === showCompleted) {
+              setTasks(prev => [newTask, ...prev]);
+            }
+          } else if (payload.eventType === 'DELETE') {
+            setTasks(prev => prev.filter(task => task.task_id !== payload.old.task_id));
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedTask = payload.new as Task;
+            if (updatedTask.is_completed === showCompleted) {
+              setTasks(prev => prev.map(task => 
+                task.task_id === updatedTask.task_id ? updatedTask : task
+              ));
+            } else {
+              setTasks(prev => prev.filter(task => task.task_id !== updatedTask.task_id));
+            }
           }
-        )
-        .subscribe();
-    }
+        }
+      )
+      .subscribe();
 
-    // Cleanup subscription
     return () => {
-      if (subscription) {
-        supabase.removeChannel(subscription);
-      }
+      supabase.removeChannel(channel);
     };
   }, [projectId, showCompleted]);
 
-  const fetchTasks = async () => {
+  useEffect(() => {
     if (!projectId) return;
     
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('project_id', projectId)
-        .eq('is_completed', showCompleted)
-        .order('created_at', { ascending: false });
+    const fetchTasks = async () => {
+      setIsLoading(true);
       
-      if (error) throw error;
-      setTasks(data || []);
+      const timeout = setTimeout(() => {
+        setIsLoading(false);
+        toast.error('Loading tasks is taking longer than expected. Please refresh the page.');
+      }, 10000);
+      
+      setLoadingTimeout(timeout);
+      
+      try {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('project_id', projectId)
+          .eq('is_completed', showCompleted)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        setTasks(data || []);
 
-      if (onTaskUpdated) {
-        onTaskUpdated();
+        if (onTaskUpdated) {
+          onTaskUpdated();
+        }
+      } catch (error: any) {
+        console.error('Error fetching tasks:', error);
+        toast.error('Failed to load tasks');
+      } finally {
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+        }
+        setIsLoading(false);
       }
-    } catch (error: any) {
-      console.error('Error fetching tasks:', error);
-      toast.error('Failed to load tasks');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    fetchTasks();
+
+    return () => {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+    };
+  }, [projectId, showCompleted]);
 
   const handleStatusChange = async (taskId: string, isCompleted: boolean) => {
     try {
@@ -99,7 +125,6 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, showCompleted = false, o
       
       if (error) throw error;
       
-      // Immediately update the UI by removing the task from the current list
       setTasks(tasks.filter(task => task.task_id !== taskId));
       
       toast.success(`Task ${isCompleted ? 'completed' : 'reopened'}`);
@@ -118,7 +143,6 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, showCompleted = false, o
       
       if (error) throw error;
       
-      // Update state
       setTasks(tasks.filter(task => task.task_id !== taskId));
       toast.success('Task deleted successfully');
     } catch (error: any) {
@@ -151,11 +175,9 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, showCompleted = false, o
       
       if (error) throw error;
       
-      // Close dialog and refresh tasks
       setIsEditDialogOpen(false);
       toast.success('Task updated successfully');
       
-      // Update the task in the current state
       setTasks(tasks.map(task => 
         task.task_id === taskId ? 
         { ...task, ...values, updated_at: new Date().toISOString() } : 
@@ -169,22 +191,34 @@ const TaskList: React.FC<TaskListProps> = ({ projectId, showCompleted = false, o
     }
   };
 
-  if (isLoading) {
-    return <div className="text-center py-4">Loading tasks...</div>;
+  if (!projectId) {
+    return (
+      <Card className="border border-dashed">
+        <CardContent className="flex items-center justify-center p-6 text-muted-foreground">
+          Select a project to see tasks
+        </CardContent>
+      </Card>
+    );
   }
 
-  if (!projectId) {
-    return <div className="text-center py-4 text-muted-foreground">Select a project to see tasks</div>;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-collabCorner-purple" />
+      </div>
+    );
   }
 
   if (tasks.length === 0) {
     return (
-      <div className="text-center py-4 text-muted-foreground">
-        {showCompleted 
-          ? "No completed tasks found for this project" 
-          : "No active tasks found for this project"
-        }
-      </div>
+      <Card className="border border-dashed">
+        <CardContent className="flex items-center justify-center p-6 text-muted-foreground">
+          {showCompleted 
+            ? "No completed tasks found for this project" 
+            : "No active tasks found for this project"
+          }
+        </CardContent>
+      </Card>
     );
   }
 
