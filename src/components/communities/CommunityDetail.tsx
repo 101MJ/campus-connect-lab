@@ -1,14 +1,14 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import PostList from './PostList';
 import CreatePost from './CreatePost';
-import { ArrowLeft, Users, Trash2 } from 'lucide-react';
 import DeleteCommunityDialog from './DeleteCommunityDialog';
+import CommunityHeader from './CommunityHeader';
+import CommunityMembershipActions from './CommunityMembershipActions';
 
 interface CommunityDetailProps {
   communityId: string;
@@ -30,6 +30,16 @@ const CommunityDetail = ({ communityId, onBack }: CommunityDetailProps) => {
       fetchCommunityDetails();
     }
   }, [communityId, user]);
+
+  useEffect(() => {
+    checkIsCreator();
+  }, [user, community]);
+
+  const checkIsCreator = async () => {
+    if (user && community) {
+      setIsCreator(user.id === community.created_by);
+    }
+  };
 
   const fetchCommunityDetails = async () => {
     setIsLoading(true);
@@ -70,16 +80,6 @@ const CommunityDetail = ({ communityId, onBack }: CommunityDetailProps) => {
       setIsLoading(false);
     }
   };
-
-  const checkIsCreator = async () => {
-    if (user && community) {
-      setIsCreator(user.id === community.created_by);
-    }
-  };
-
-  useEffect(() => {
-    checkIsCreator();
-  }, [user, community]);
 
   const handleJoinCommunity = async () => {
     if (!user) {
@@ -144,62 +144,25 @@ const CommunityDetail = ({ communityId, onBack }: CommunityDetailProps) => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <Button onClick={onBack} variant="outline" size="sm">
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back
-        </Button>
-      </div>
-      
       <Card>
         <CardHeader className="bg-muted/50">
-          <div className="flex justify-between items-center">
-            <CardTitle className="text-2xl flex items-center gap-2">
-              <Users className="h-6 w-6 text-collabCorner-purple" />
-              {community?.name}
-            </CardTitle>
-            <div className="flex items-center gap-4">
-              {user && (
-                isMember ? (
-                  <div className="flex items-center gap-4">
-                    <Button 
-                      onClick={() => setShowCreatePost(!showCreatePost)} 
-                      className="bg-collabCorner-purple"
-                    >
-                      {showCreatePost ? 'Cancel' : 'Create Post'}
-                    </Button>
-                    <Button 
-                      onClick={handleLeaveCommunity}
-                      variant="outline"
-                    >
-                      Leave Community
-                    </Button>
-                  </div>
-                ) : (
-                  <Button 
-                    onClick={handleJoinCommunity}
-                    className="bg-collabCorner-purple"
-                  >
-                    Join Community
-                  </Button>
-                )
-              )}
-              {isCreator && (
-                <Button
-                  onClick={() => setShowDeleteDialog(true)}
-                  variant="destructive"
-                  size="icon"
-                  className="ml-2"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-            <Users className="h-4 w-4" />
-            <span>{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
-            <span>•</span>
-            <span>Created {format(new Date(community?.created_at || ''), 'MMM d, yyyy')}</span>
+          <CommunityHeader
+            community={community}
+            memberCount={memberCount}
+            isCreator={isCreator}
+            onBack={onBack}
+            onDeleteClick={() => setShowDeleteDialog(true)}
+          />
+          <div className="flex justify-end mt-4">
+            {user && (
+              <CommunityMembershipActions
+                isMember={isMember}
+                showCreatePost={showCreatePost}
+                onJoin={handleJoinCommunity}
+                onLeave={handleLeaveCommunity}
+                onToggleCreatePost={() => setShowCreatePost(!showCreatePost)}
+              />
+            )}
           </div>
         </CardHeader>
         <CardContent className="pt-6">
