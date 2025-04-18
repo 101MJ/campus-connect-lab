@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,20 +7,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PostList from './PostList';
 import CreatePost from './CreatePost';
-import { ArrowLeft, Users } from 'lucide-react';
+import { ArrowLeft, Users, Trash2 } from 'lucide-react';
+import DeleteCommunityDialog from './DeleteCommunityDialog';
 
 interface CommunityDetailProps {
   communityId: string;
   onBack: () => void;
 }
 
-const CommunityDetail: React.FC<CommunityDetailProps> = ({ communityId, onBack }) => {
+const CommunityDetail = ({ communityId, onBack }: CommunityDetailProps) => {
   const { user } = useAuth();
   const [community, setCommunity] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isMember, setIsMember] = useState(false);
   const [memberCount, setMemberCount] = useState(0);
   const [showCreatePost, setShowCreatePost] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
     if (communityId) {
@@ -32,7 +34,6 @@ const CommunityDetail: React.FC<CommunityDetailProps> = ({ communityId, onBack }
   const fetchCommunityDetails = async () => {
     setIsLoading(true);
     try {
-      // Fetch community details
       const { data: communityData, error: communityError } = await supabase
         .from('communities')
         .select('*')
@@ -42,7 +43,6 @@ const CommunityDetail: React.FC<CommunityDetailProps> = ({ communityId, onBack }
       if (communityError) throw communityError;
       setCommunity(communityData);
 
-      // Check if user is a member
       if (user) {
         const { data: membershipData, error: membershipError } = await supabase
           .from('community_members')
@@ -55,7 +55,6 @@ const CommunityDetail: React.FC<CommunityDetailProps> = ({ communityId, onBack }
         setIsMember(!!membershipData);
       }
 
-      // Get member count
       const { count, error: countError } = await supabase
         .from('community_members')
         .select('*', { count: 'exact', head: true })
@@ -71,6 +70,16 @@ const CommunityDetail: React.FC<CommunityDetailProps> = ({ communityId, onBack }
       setIsLoading(false);
     }
   };
+
+  const checkIsCreator = async () => {
+    if (user && community) {
+      setIsCreator(user.id === community.created_by);
+    }
+  };
+
+  useEffect(() => {
+    checkIsCreator();
+  }, [user, community]);
 
   const handleJoinCommunity = async () => {
     if (!user) {
@@ -146,43 +155,55 @@ const CommunityDetail: React.FC<CommunityDetailProps> = ({ communityId, onBack }
           <div className="flex justify-between items-center">
             <CardTitle className="text-2xl flex items-center gap-2">
               <Users className="h-6 w-6 text-collabCorner-purple" />
-              {community.name}
+              {community?.name}
             </CardTitle>
-            {user && (
-              isMember ? (
-                <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4">
+              {user && (
+                isMember ? (
+                  <div className="flex items-center gap-4">
+                    <Button 
+                      onClick={() => setShowCreatePost(!showCreatePost)} 
+                      className="bg-collabCorner-purple"
+                    >
+                      {showCreatePost ? 'Cancel' : 'Create Post'}
+                    </Button>
+                    <Button 
+                      onClick={handleLeaveCommunity}
+                      variant="outline"
+                    >
+                      Leave Community
+                    </Button>
+                  </div>
+                ) : (
                   <Button 
-                    onClick={() => setShowCreatePost(!showCreatePost)} 
+                    onClick={handleJoinCommunity}
                     className="bg-collabCorner-purple"
                   >
-                    {showCreatePost ? 'Cancel' : 'Create Post'}
+                    Join Community
                   </Button>
-                  <Button 
-                    onClick={handleLeaveCommunity}
-                    variant="outline"
-                  >
-                    Leave Community
-                  </Button>
-                </div>
-              ) : (
-                <Button 
-                  onClick={handleJoinCommunity}
-                  className="bg-collabCorner-purple"
+                )
+              )}
+              {isCreator && (
+                <Button
+                  onClick={() => setShowDeleteDialog(true)}
+                  variant="destructive"
+                  size="icon"
+                  className="ml-2"
                 >
-                  Join Community
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-              )
-            )}
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
             <Users className="h-4 w-4" />
             <span>{memberCount} {memberCount === 1 ? 'member' : 'members'}</span>
             <span>•</span>
-            <span>Created {format(new Date(community.created_at), 'MMM d, yyyy')}</span>
+            <span>Created {format(new Date(community?.created_at || ''), 'MMM d, yyyy')}</span>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
-          {community.description && (
+          {community?.description && (
             <p className="mb-6 text-muted-foreground">{community.description}</p>
           )}
           
@@ -202,6 +223,14 @@ const CommunityDetail: React.FC<CommunityDetailProps> = ({ communityId, onBack }
           <PostList communityId={communityId} isMember={isMember} />
         </CardContent>
       </Card>
+
+      <DeleteCommunityDialog
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        communityId={communityId}
+        communityName={community?.name || ''}
+        onDeleteSuccess={onBack}
+      />
     </div>
   );
 };
