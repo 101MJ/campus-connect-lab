@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { Plus, Pencil } from 'lucide-react';
@@ -12,6 +13,8 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import EditProjectForm from './EditProjectForm';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Project {
   project_id: string;
