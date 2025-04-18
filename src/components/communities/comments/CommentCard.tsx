@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -110,7 +111,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
             <div className="flex items-center gap-1">
               <EditCommentDialog 
                 comment={comment} 
-                onCommentUpdated={() => onCommentUpdated()} 
+                onCommentUpdated={onDeleteComment} 
               />
               <Button
                 variant="ghost"

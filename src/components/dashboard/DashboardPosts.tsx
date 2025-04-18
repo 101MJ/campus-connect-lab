@@ -15,7 +15,7 @@ const DashboardPosts = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { joinedCommunities } = useCommunityManager();
-  const { recentPosts, loading } = useRecentPosts(user?.id, joinedCommunities);
+  const { recentPosts, loading, fetchRecentPosts } = useRecentPosts(user?.id, joinedCommunities);
   const { reactions, setReactions } = usePostReactions();
 
   // Sort posts by date in descending order
@@ -52,6 +52,7 @@ const DashboardPosts = () => {
                 reaction={reactions[post.post_id] || { likes: 0, dislikes: 0 }}
                 isMember={true}
                 onReactionUpdate={handleReactionUpdate}
+                onPostUpdated={fetchRecentPosts}
               />
             ))}
           </div>

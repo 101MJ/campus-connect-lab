@@ -17,7 +17,7 @@ const POSTS_PER_PAGE = {
 };
 
 const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
-  const { posts, loading, reactions, setReactions } = usePostList(communityId);
+  const { posts, loading, reactions, setReactions, fetchPosts } = usePostList(communityId);
   const [visiblePosts, setVisiblePosts] = useState<number>(window.innerWidth >= 768 ? POSTS_PER_PAGE.DESKTOP : POSTS_PER_PAGE.MOBILE);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const observer = useRef<IntersectionObserver | null>(null);
@@ -105,6 +105,7 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
               reaction={reactions[post.post_id] || { likes: 0, dislikes: 0 }}
               isMember={isMember}
               onReactionUpdate={handleReactionUpdate}
+              onPostUpdated={fetchPosts}
             />
           </div>
         );
