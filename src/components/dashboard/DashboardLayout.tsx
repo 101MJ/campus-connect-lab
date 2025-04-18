@@ -1,19 +1,34 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardSidebar from './DashboardSidebar';
 
 const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Redirect to sign in if not authenticated
-  React.useEffect(() => {
+  useEffect(() => {
     if (!loading && !user) {
+      // Save the current path before redirecting
+      if (location.pathname !== '/signin') {
+        localStorage.setItem('lastVisitedPath', location.pathname);
+      }
       navigate('/signin');
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, location.pathname]);
+
+  // After successful authentication, redirect to the last visited path
+  useEffect(() => {
+    if (user && location.pathname === '/dashboard') {
+      const lastPath = localStorage.getItem('lastVisitedPath');
+      if (lastPath && lastPath !== '/signin' && lastPath !== '/signup') {
+        navigate(lastPath);
+      }
+    }
+  }, [user, navigate, location.pathname]);
 
   if (loading) {
     return (

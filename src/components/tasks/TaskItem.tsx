@@ -3,10 +3,10 @@ import React from 'react';
 import { format } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-import { Trash2, CalendarDays } from 'lucide-react';
+import { Trash2, CalendarDays, Edit } from 'lucide-react';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 interface TaskItemProps {
   task: {
@@ -19,9 +19,10 @@ interface TaskItemProps {
   };
   onDelete: (taskId: string) => void;
   onStatusChange: (taskId: string, isCompleted: boolean) => void;
+  onEdit: (taskId: string) => void;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, onDelete, onStatusChange }) => {
+const TaskItem: React.FC<TaskItemProps> = ({ task, onDelete, onStatusChange, onEdit }) => {
   const handleStatusChange = async (checked: boolean) => {
     onStatusChange(task.task_id, checked);
   };
@@ -71,7 +72,15 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onDelete, onStatusChange }) =
           )}
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end p-1">
+      <CardFooter className="flex justify-end p-1 gap-1">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          onClick={() => onEdit(task.task_id)}
+          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 h-8 w-8"
+        >
+          <Edit className="h-4 w-4" />
+        </Button>
         <Button 
           variant="ghost" 
           size="icon" 

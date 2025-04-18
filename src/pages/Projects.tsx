@@ -10,9 +10,11 @@ import { useProjects } from '@/hooks/useProjects';
 import { useTaskManagement } from '@/hooks/useTaskManagement';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
+import { useLocation } from 'react-router-dom';
 
 const Projects: React.FC = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const {
     projects,
     isLoading,
@@ -29,6 +31,11 @@ const Projects: React.FC = () => {
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
 
+  // Store the current path in localStorage to preserve navigation
+  useEffect(() => {
+    localStorage.setItem('lastVisitedPath', location.pathname);
+  }, [location.pathname]);
+
   const onSubmitProject = async (values: ProjectFormValues) => {
     const success = await createProject(values);
     if (success) {
@@ -42,11 +49,18 @@ const Projects: React.FC = () => {
     const success = await createTask(values, selectedProject, user.id);
     if (success) {
       setTaskDialogOpen(false);
+      // Refresh the project data after adding a task
+      fetchProjects();
     }
   };
 
   const handleProjectClick = (projectId: string) => {
     setSelectedProject(projectId === selectedProject ? null : projectId);
+  };
+
+  const handleTaskUpdated = () => {
+    // Refresh projects to update any counts or data that depends on tasks
+    fetchProjects();
   };
 
   const selectedProjectData = getProjectById(selectedProject);
@@ -95,7 +109,8 @@ const Projects: React.FC = () => {
               <>
                 <ProjectDetails 
                   project={selectedProjectData} 
-                  onAddTask={() => setTaskDialogOpen(true)} 
+                  onAddTask={() => setTaskDialogOpen(true)}
+                  onTaskUpdated={handleTaskUpdated}
                 />
                 
                 <TaskFormDialog

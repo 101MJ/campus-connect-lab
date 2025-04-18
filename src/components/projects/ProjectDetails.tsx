@@ -27,9 +27,10 @@ export interface Project {
 interface ProjectDetailsProps {
   project: Project;
   onAddTask: () => void;
+  onTaskUpdated?: () => void;
 }
 
-const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask }) => {
+const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onTaskUpdated }) => {
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
@@ -66,6 +67,12 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask }) =
       toast.error('Failed to update project');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleTaskUpdated = () => {
+    if (onTaskUpdated) {
+      onTaskUpdated();
     }
   };
 
@@ -121,14 +128,22 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask }) =
         <div>
           <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple">Pending Tasks</h2>
           <div className="bg-white rounded-lg p-4">
-            <TaskList projectId={project.project_id} showCompleted={false} />
+            <TaskList 
+              projectId={project.project_id} 
+              showCompleted={false} 
+              onTaskUpdated={handleTaskUpdated}
+            />
           </div>
         </div>
         
         <div>
           <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple">Completed Tasks</h2>
           <div className="bg-white rounded-lg p-4">
-            <TaskList projectId={project.project_id} showCompleted={true} />
+            <TaskList 
+              projectId={project.project_id} 
+              showCompleted={true}
+              onTaskUpdated={handleTaskUpdated} 
+            />
           </div>
         </div>
       </div>
