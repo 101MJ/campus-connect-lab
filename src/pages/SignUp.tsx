@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { supabase } from '@/integrations/supabase/client';
 
 const signUpSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters'),
@@ -36,7 +36,18 @@ const SignUp = () => {
   const onSubmit = async (values: SignUpFormValues) => {
     setIsLoading(true);
     try {
-      await signUp(values.email, values.password, values.fullName);
+      const { success, error } = await signUp(values.email, values.password);
+      
+      if (success) {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user) {
+          await supabase.from('profiles').update({
+            full_name: values.fullName
+          }).eq('id', userData.user.id);
+        }
+      } else if (error) {
+        console.error('Sign up error:', error);
+      }
     } catch (error) {
       console.error('Sign up error:', error);
     } finally {

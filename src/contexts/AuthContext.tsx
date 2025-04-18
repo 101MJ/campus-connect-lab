@@ -1,9 +1,21 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
+// Define the Profile interface
+export interface Profile {
+  id?: string;
+  full_name?: string;
+  bio?: string;
+  portfolio?: string;
+  skills?: string[];
+  hobbies?: string[];
+}
+
 interface AuthContextType {
   user: any | null;
+  profile: Profile | null; // Add profile to context type
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string; redirectPath?: string }>;
   signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -22,21 +34,56 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState<Profile | null>(null); // Add profile state
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Function to fetch user profile
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
 
   useEffect(() => {
     const session = async () => {
       const { data: { session } } = await supabase.auth.getSession()
 
       setUser(session?.user ?? null)
+      
+      // Fetch user profile if user exists
+      if (session?.user) {
+        await fetchUserProfile(session.user.id);
+      }
+      
       setLoading(false)
     }
 
     session()
 
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null)
+      
+      // Fetch user profile if user exists after auth state change
+      if (session?.user) {
+        await fetchUserProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+      
       setLoading(false)
     })
   }, []);
@@ -51,6 +98,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (error) {
         throw error;
+      }
+
+      // Fetch profile after successful sign in
+      if (data.user) {
+        await fetchUserProfile(data.user.id);
       }
 
       // After successful sign in, check if there's a last visited path
@@ -96,6 +148,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(true);
       await supabase.auth.signOut();
       setUser(null);
+      setProfile(null); // Clear profile on sign out
       navigate('/signin');
     } catch (error: any) {
       console.error('Error signing out:', error);
@@ -108,6 +161,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
+        profile, // Include profile in the context value
         loading,
         signIn,
         signUp,
