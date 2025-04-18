@@ -11,6 +11,7 @@ import AcademicsCard from '@/components/dashboard/AcademicsCard';
 import ProjectsTab from '@/components/dashboard/ProjectsTab';
 import CommunitiesTab from '@/components/dashboard/CommunitiesTab';
 import TasksList from '@/components/dashboard/TasksList';
+import DashboardPosts from '@/components/dashboard/DashboardPosts';
 
 const Dashboard = () => {
   const { user, profile } = useAuth();
@@ -75,6 +76,8 @@ const Dashboard = () => {
           />
           <AcademicsCard />
         </div>
+
+        <DashboardPosts />
 
         <Tabs defaultValue="projects" className="w-full">
           <TabsList>
