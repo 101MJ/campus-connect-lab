@@ -77,8 +77,6 @@ const Dashboard = () => {
           <AcademicsCard />
         </div>
 
-        <DashboardPosts />
-
         <Tabs defaultValue="projects" className="w-full">
           <TabsList>
             <TabsTrigger value="projects">Projects</TabsTrigger>
@@ -95,9 +93,12 @@ const Dashboard = () => {
         </Tabs>
 
         <TasksList tasks={tasks} loading={tasksLoading} />
+        
+        <DashboardPosts />
       </div>
     </DashboardLayout>
   );
 };
 
 export default Dashboard;
+
