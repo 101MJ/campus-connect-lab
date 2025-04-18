@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { MessageSquare, User, Trash2 } from 'lucide-react';
@@ -11,12 +10,14 @@ import PostComments from './PostComments';
 import PostReaction from './PostReaction';
 import type { Post } from '@/hooks/usePostList';
 import type { PostReaction as PostReactionType } from '@/hooks/usePostReactions';
+import EditPostDialog from './EditPostDialog';
 
 interface PostCardProps {
   post: Post;
   reaction: PostReactionType;
   isMember: boolean;
   onReactionUpdate: (postId: string, updatedReaction: PostReactionType) => void;
+  onPostUpdated: () => void;
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -24,6 +25,7 @@ const PostCard: React.FC<PostCardProps> = ({
   reaction,
   isMember,
   onReactionUpdate,
+  onPostUpdated,
 }) => {
   const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -74,15 +76,18 @@ const PostCard: React.FC<PostCardProps> = ({
               {format(new Date(post.created_at), 'MMM d, yyyy')}
             </div>
             {isAuthor && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                onClick={handleDeletePost}
-                disabled={isDeleting}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <EditPostDialog post={post} onPostUpdated={onPostUpdated} />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                  onClick={handleDeletePost}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             )}
           </div>
         </div>

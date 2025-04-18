@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Comment, CommentReaction } from './useComments';
+import EditCommentDialog from '../EditCommentDialog';
 
 interface CommentCardProps {
   comment: Comment;
@@ -107,15 +107,21 @@ const CommentCard: React.FC<CommentCardProps> = ({
             {format(new Date(comment.created_at), 'MMM d, yyyy')}
           </span>
           {user?.id === comment.author_id && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50"
-              onClick={() => onDeleteComment(comment.comment_id)}
-              disabled={isDeletingComment}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <EditCommentDialog 
+                comment={comment} 
+                onCommentUpdated={() => onCommentUpdated()} 
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={() => onDeleteComment(comment.comment_id)}
+                disabled={isDeletingComment}
+              >
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </div>
           )}
         </div>
       </div>

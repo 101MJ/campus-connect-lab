@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ThumbsUp, ThumbsDown } from 'lucide-react';
@@ -35,7 +36,10 @@ const PostReaction: React.FC<PostReactionProps> = ({
     const currentReaction = reaction.userReaction;
     
     try {
+      let updatedReaction = { ...reaction };
+
       if (currentReaction === reactionType) {
+        // Remove reaction
         const { error } = await supabase
           .from('reactions')
           .delete()
@@ -44,33 +48,32 @@ const PostReaction: React.FC<PostReactionProps> = ({
           
         if (error) throw error;
         
-        const updatedReaction = {
+        updatedReaction = {
           ...reaction,
           [reactionType === 'like' ? 'likes' : 'dislikes']: 
             Math.max(0, reaction[reactionType === 'like' ? 'likes' : 'dislikes'] - 1),
           userReaction: undefined
         };
-        onReactionUpdate(postId, updatedReaction);
-        
       } else {
+        // Remove previous reaction if exists
         if (currentReaction) {
-          const { error } = await supabase
+          const { error: deleteError } = await supabase
             .from('reactions')
             .delete()
             .eq('post_id', postId)
             .eq('user_id', user.id);
             
-          if (error) throw error;
+          if (deleteError) throw deleteError;
           
-          const updatedCounts = {
+          updatedReaction = {
             ...reaction,
             [currentReaction === 'like' ? 'likes' : 'dislikes']: 
               Math.max(0, reaction[currentReaction === 'like' ? 'likes' : 'dislikes'] - 1)
           };
-          onReactionUpdate(postId, updatedCounts);
         }
         
-        const { error } = await supabase
+        // Add new reaction
+        const { error: insertError } = await supabase
           .from('reactions')
           .insert({
             post_id: postId,
@@ -78,16 +81,17 @@ const PostReaction: React.FC<PostReactionProps> = ({
             reaction_type: reactionType
           });
           
-        if (error) throw error;
+        if (insertError) throw insertError;
         
-        const updatedReaction = {
-          ...reaction,
+        updatedReaction = {
+          ...updatedReaction,
           [reactionType === 'like' ? 'likes' : 'dislikes']: 
-            (reaction[reactionType === 'like' ? 'likes' : 'dislikes'] || 0) + 1,
+            (updatedReaction[reactionType === 'like' ? 'likes' : 'dislikes'] || 0) + 1,
           userReaction: reactionType
         };
-        onReactionUpdate(postId, updatedReaction);
       }
+      
+      onReactionUpdate(postId, updatedReaction);
     } catch (error: any) {
       console.error('Error handling reaction:', error);
       toast.error('Failed to update reaction');

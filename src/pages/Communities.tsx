@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -28,6 +27,11 @@ const Communities = () => {
   } = useCommunityManager();
 
   const { recentPosts } = useRecentPosts(user?.id, joinedCommunities);
+
+  // Sort posts by date in descending order before rendering
+  const sortedRecentPosts = [...recentPosts].sort((a, b) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -103,7 +107,7 @@ const Communities = () => {
                 <h2 className="text-xl font-semibold mb-4">Latest Posts from Your Communities</h2>
                 {joinedCommunities.length > 0 && (
                   <div className="space-y-6">
-                    {recentPosts.map(post => (
+                    {sortedRecentPosts.map(post => (
                       <div 
                         key={post.post_id} 
                         className="cursor-pointer"
@@ -132,7 +136,7 @@ const Communities = () => {
         <CommunitySidebar 
           myCommunities={myCommunities}
           joinedCommunities={joinedCommunities}
-          recentPosts={recentPosts}
+          recentPosts={sortedRecentPosts}
           loading={isLoading}
           onViewCommunity={handleViewCommunity}
           onSearch={handleSearch}
