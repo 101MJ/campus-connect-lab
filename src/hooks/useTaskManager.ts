@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -9,7 +8,7 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
   const queryClient = useQueryClient();
   const [isDeletingTask, setIsDeletingTask] = useState(false);
   
-  // Use React Query for data fetching with caching
+  // Use React Query for data fetching with caching and sort by deadline
   const { 
     data: tasks = [], 
     isLoading,
@@ -25,7 +24,7 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
           .select('*')
           .eq('project_id', projectId)
           .eq('is_completed', showCompleted)
-          .order('created_at', { ascending: false });
+          .order('deadline', { ascending: true, nullsLast: true });
         
         if (error) throw error;
         return data || [];
@@ -36,8 +35,7 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
       }
     },
     enabled: !!projectId,
-    staleTime: 10000, // Reduced stale time for more frequent updates
-    refetchOnWindowFocus: true
+    staleTime: 10000
   });
 
   // Set up real-time subscription for the selected project's tasks
@@ -55,45 +53,15 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
           filter: `project_id=eq.${projectId}`,
         },
         (payload) => {
-          // Update cache based on the event type
-          if (payload.eventType === 'INSERT') {
-            const newTask = payload.new as Task;
-            if (newTask.is_completed === showCompleted) {
-              // Refetch to ensure we have updated data
-              refetch();
-              // Also invalidate projects to update progress
-              queryClient.invalidateQueries({
-                queryKey: ['projects'],
-                exact: false
-              });
-            }
-          } else if (payload.eventType === 'DELETE') {
-            queryClient.setQueryData(['tasks', projectId, showCompleted], 
-              (oldData: Task[] | undefined) => 
-                (oldData || []).filter(task => task.task_id !== payload.old.task_id));
-            // Also invalidate projects to update progress
-            queryClient.invalidateQueries({
-              queryKey: ['projects'],
-              exact: false
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedTask = payload.new as Task;
-            if (updatedTask.is_completed === showCompleted) {
-              queryClient.setQueryData(['tasks', projectId, showCompleted], 
-                (oldData: Task[] | undefined) => 
-                  (oldData || []).map(task => 
-                    task.task_id === updatedTask.task_id ? updatedTask : task));
-            } else {
-              queryClient.setQueryData(['tasks', projectId, showCompleted], 
-                (oldData: Task[] | undefined) => 
-                  (oldData || []).filter(task => task.task_id !== updatedTask.task_id));
-            }
-            // Also invalidate projects to update progress
-            queryClient.invalidateQueries({
-              queryKey: ['projects'],
-              exact: false
-            });
-          }
+          // Invalidate both tasks and projects queries to update progress
+          queryClient.invalidateQueries({
+            queryKey: ['tasks'],
+            exact: false
+          });
+          queryClient.invalidateQueries({
+            queryKey: ['projects'],
+            exact: false
+          });
         }
       )
       .subscribe();
@@ -101,7 +69,7 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId, showCompleted, queryClient, refetch]);
+  }, [projectId, queryClient]);
 
   const handleStatusChange = useCallback(async (taskId: string, isCompleted: boolean) => {
     try {

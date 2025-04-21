@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { AlertTriangle, CheckCircle, Clock } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProjectProgressProps {
   totalTasks: number;
@@ -12,12 +13,24 @@ interface ProjectProgressProps {
 }
 
 const ProjectProgress: React.FC<ProjectProgressProps> = ({
-  totalTasks,
-  completedTasks,
-  status,
+  totalTasks: initialTotalTasks,
+  completedTasks: initialCompletedTasks,
+  status: initialStatus,
   priority
 }) => {
-  const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  const [progress, setProgress] = useState(
+    initialTotalTasks > 0 ? (initialCompletedTasks / initialTotalTasks) * 100 : 0
+  );
+  const [totalTasks, setTotalTasks] = useState(initialTotalTasks);
+  const [completedTasks, setCompletedTasks] = useState(initialCompletedTasks);
+  const [status, setStatus] = useState(initialStatus);
+
+  useEffect(() => {
+    setTotalTasks(initialTotalTasks);
+    setCompletedTasks(initialCompletedTasks);
+    setStatus(initialStatus);
+    setProgress(initialTotalTasks > 0 ? (initialCompletedTasks / initialTotalTasks) * 100 : 0);
+  }, [initialTotalTasks, initialCompletedTasks, initialStatus]);
 
   const statusConfig = {
     on_track: { color: 'bg-green-500', icon: CheckCircle, text: 'On Track' },
