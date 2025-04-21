@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          created_at: string | null
+          description: string
+          icon: string
+          id: string
+          name: string
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          icon: string
+          id?: string
+          name: string
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+          type?: string
+        }
+        Relationships: []
+      }
       comments: {
         Row: {
           author_id: string
@@ -176,30 +203,42 @@ export type Database = {
       }
       projects: {
         Row: {
+          completed_tasks: number | null
           created_at: string | null
           created_by: string
           deadline: string | null
           description: string | null
+          priority: string | null
           project_id: string
+          status: string | null
           title: string
+          total_tasks: number | null
           updated_at: string | null
         }
         Insert: {
+          completed_tasks?: number | null
           created_at?: string | null
           created_by: string
           deadline?: string | null
           description?: string | null
+          priority?: string | null
           project_id?: string
+          status?: string | null
           title: string
+          total_tasks?: number | null
           updated_at?: string | null
         }
         Update: {
+          completed_tasks?: number | null
           created_at?: string | null
           created_by?: string
           deadline?: string | null
           description?: string | null
+          priority?: string | null
           project_id?: string
+          status?: string | null
           title?: string
+          total_tasks?: number | null
           updated_at?: string | null
         }
         Relationships: []
@@ -290,6 +329,35 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
           },
         ]
       }

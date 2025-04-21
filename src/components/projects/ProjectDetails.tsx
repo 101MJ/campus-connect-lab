@@ -1,10 +1,11 @@
-
 import React from 'react';
 import { format } from 'date-fns';
-import { Plus, Pencil } from 'lucide-react';
+import { Plus, Pencil, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import TaskList from '@/components/tasks/TaskList';
+import ProjectProgress from './ProjectProgress';
+import { useAchievements } from '@/hooks/useAchievements';
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,10 @@ export interface Project {
   description?: string;
   deadline?: string;
   created_at: string;
+  priority: 'low' | 'medium' | 'high';
+  status: 'on_track' | 'at_risk' | 'delayed';
+  total_tasks: number;
+  completed_tasks: number;
 }
 
 interface ProjectDetailsProps {
@@ -33,6 +38,7 @@ interface ProjectDetailsProps {
 const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onTaskUpdated }) => {
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const { userAchievements } = useAchievements();
 
   const formatDate = (dateString: string | undefined | null) => {
     if (!dateString) return 'No deadline';
@@ -76,6 +82,10 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onT
     }
   };
 
+  const projectAchievements = userAchievements.filter(
+    ua => ua.achievement.type === 'project'
+  );
+
   return (
     <>
       <div className="mb-4">
@@ -107,11 +117,37 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onT
                 </Button>
               </div>
             </div>
+
+            <div className="mt-6">
+              <ProjectProgress
+                totalTasks={project.total_tasks}
+                completedTasks={project.completed_tasks}
+                status={project.status}
+                priority={project.priority}
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-sm">
               {project.description || 'No description provided'}
             </p>
+            
+            {projectAchievements.length > 0 && (
+              <div className="mt-4 p-4 bg-collabCorner-purple/5 rounded-lg">
+                <h3 className="flex items-center gap-2 text-sm font-medium mb-3">
+                  <Trophy className="h-4 w-4 text-collabCorner-purple" />
+                  Project Achievements
+                </h3>
+                <div className="flex gap-2 flex-wrap">
+                  {projectAchievements.map(ua => (
+                    <div key={ua.id} className="text-xs bg-white px-2 py-1 rounded border">
+                      {ua.achievement.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {project.deadline && (
               <div className="mt-4 text-sm">
                 <span className="font-medium">Deadline: </span>
