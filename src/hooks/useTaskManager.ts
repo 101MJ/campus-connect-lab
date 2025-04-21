@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -24,7 +25,7 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
           .select('*')
           .eq('project_id', projectId)
           .eq('is_completed', showCompleted)
-          .order('deadline', { ascending: true, nullsLast: true });
+          .order('deadline', { ascending: true, nullsFirst: false });
         
         if (error) throw error;
         return data || [];
