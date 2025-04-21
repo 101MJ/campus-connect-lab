@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { toast } from 'sonner';
 import PostList from './PostList';
 import CreatePost from './CreatePost';
 import DeleteCommunityDialog from './DeleteCommunityDialog';
