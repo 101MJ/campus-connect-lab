@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { format } from 'date-fns';
 import { Plus, Pencil, Trophy } from 'lucide-react';
@@ -17,6 +18,7 @@ import EditProjectForm from './EditProjectForm';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Project } from '@/types/project';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface ProjectDetailsProps {
   project: Project;
@@ -28,6 +30,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onT
   const [editDialogOpen, setEditDialogOpen] = React.useState(false);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const { userAchievements } = useAchievements();
+  const queryClient = useQueryClient();
 
   const formatDate = (dateString: string | undefined | null) => {
     if (!dateString) return 'No deadline';
@@ -47,6 +50,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onT
           title: values.title,
           description: values.description || null,
           deadline: values.deadline || null,
+          priority: values.priority || 'medium',
         })
         .eq('project_id', project.project_id);
 
@@ -55,8 +59,11 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onT
       toast.success('Project updated successfully');
       setEditDialogOpen(false);
       
-      const event = new CustomEvent('project-updated');
-      window.dispatchEvent(event);
+      // Invalidate and refetch project data
+      queryClient.invalidateQueries({
+        queryKey: ['projects'],
+        exact: false
+      });
     } catch (error: any) {
       console.error('Error updating project:', error);
       toast.error('Failed to update project');
@@ -66,6 +73,12 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onT
   };
 
   const handleTaskUpdated = () => {
+    // Invalidate and refetch project data to update progress
+    queryClient.invalidateQueries({
+      queryKey: ['projects'],
+      exact: false
+    });
+    
     if (onTaskUpdated) {
       onTaskUpdated();
     }

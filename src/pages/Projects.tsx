@@ -12,10 +12,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
 import { useLocation } from 'react-router-dom';
 import { Project } from '@/types/project';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Projects: React.FC = () => {
   const { user } = useAuth();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const {
     projects,
     isLoading,
@@ -32,9 +34,6 @@ const Projects: React.FC = () => {
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
 
-  // Remove the useEffect that stores path in localStorage
-  // This was causing part of the redirect chain
-
   const onSubmitProject = async (values: ProjectFormValues) => {
     const success = await createProject(values);
     if (success) {
@@ -50,6 +49,11 @@ const Projects: React.FC = () => {
       setTaskDialogOpen(false);
       // Refresh the project data after adding a task
       fetchProjects();
+      // Also invalidate tasks queries
+      queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+        exact: false
+      });
     }
   };
 
@@ -60,6 +64,11 @@ const Projects: React.FC = () => {
   const handleTaskUpdated = () => {
     // Refresh projects to update any counts or data that depends on tasks
     fetchProjects();
+    // Also invalidate tasks queries
+    queryClient.invalidateQueries({
+      queryKey: ['tasks'],
+      exact: false
+    });
   };
 
   const selectedProjectData = getProjectById(selectedProject);
@@ -69,14 +78,23 @@ const Projects: React.FC = () => {
       fetchProjects();
     };
 
+    const handleTaskCreated = () => {
+      fetchProjects();
+      // Also invalidate tasks queries
+      queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+        exact: false
+      });
+    };
+
     window.addEventListener('project-updated', handleProjectUpdate);
-    window.addEventListener('task-created', handleProjectUpdate);
+    window.addEventListener('task-created', handleTaskCreated);
 
     return () => {
       window.removeEventListener('project-updated', handleProjectUpdate);
-      window.removeEventListener('task-created', handleProjectUpdate);
+      window.removeEventListener('task-created', handleTaskCreated);
     };
-  }, [fetchProjects]);
+  }, [fetchProjects, queryClient]);
 
   return (
     <DashboardLayout>

@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TaskFormValues {
   title: string;
@@ -12,6 +13,7 @@ interface TaskFormValues {
 
 export const useTaskManagement = () => {
   const [isSubmittingTask, setIsSubmittingTask] = useState(false);
+  const queryClient = useQueryClient();
 
   const createTask = async (values: TaskFormValues, projectId: string, createdBy: string) => {
     if (!projectId || !values.title) return;
@@ -34,6 +36,19 @@ export const useTaskManagement = () => {
       
       toast.success('Task created successfully');
       
+      // Invalidate and refetch tasks
+      queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+        exact: false
+      });
+      
+      // Invalidate and refetch projects to update progress
+      queryClient.invalidateQueries({
+        queryKey: ['projects'],
+        exact: false
+      });
+      
+      // Create a task-created event for listeners
       const event = new CustomEvent('task-created');
       window.dispatchEvent(event);
       

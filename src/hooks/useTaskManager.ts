@@ -36,8 +36,8 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
       }
     },
     enabled: !!projectId,
-    staleTime: 30000, // Data considered fresh for 30 seconds
-    refetchOnWindowFocus: false
+    staleTime: 10000, // Reduced stale time for more frequent updates
+    refetchOnWindowFocus: true
   });
 
   // Set up real-time subscription for the selected project's tasks
@@ -59,13 +59,23 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
           if (payload.eventType === 'INSERT') {
             const newTask = payload.new as Task;
             if (newTask.is_completed === showCompleted) {
-              queryClient.setQueryData(['tasks', projectId, showCompleted], 
-                (oldData: Task[] | undefined) => [newTask, ...(oldData || [])]);
+              // Refetch to ensure we have updated data
+              refetch();
+              // Also invalidate projects to update progress
+              queryClient.invalidateQueries({
+                queryKey: ['projects'],
+                exact: false
+              });
             }
           } else if (payload.eventType === 'DELETE') {
             queryClient.setQueryData(['tasks', projectId, showCompleted], 
               (oldData: Task[] | undefined) => 
                 (oldData || []).filter(task => task.task_id !== payload.old.task_id));
+            // Also invalidate projects to update progress
+            queryClient.invalidateQueries({
+              queryKey: ['projects'],
+              exact: false
+            });
           } else if (payload.eventType === 'UPDATE') {
             const updatedTask = payload.new as Task;
             if (updatedTask.is_completed === showCompleted) {
@@ -78,6 +88,11 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
                 (oldData: Task[] | undefined) => 
                   (oldData || []).filter(task => task.task_id !== updatedTask.task_id));
             }
+            // Also invalidate projects to update progress
+            queryClient.invalidateQueries({
+              queryKey: ['projects'],
+              exact: false
+            });
           }
         }
       )
@@ -86,7 +101,7 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [projectId, showCompleted, queryClient]);
+  }, [projectId, showCompleted, queryClient, refetch]);
 
   const handleStatusChange = useCallback(async (taskId: string, isCompleted: boolean) => {
     try {
@@ -107,6 +122,12 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
       // Invalidate related queries to ensure data consistency
       queryClient.invalidateQueries({
         queryKey: ['tasks', projectId],
+        exact: false
+      });
+      
+      // Also invalidate projects query to update progress
+      queryClient.invalidateQueries({
+        queryKey: ['projects'],
         exact: false
       });
       

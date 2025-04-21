@@ -73,6 +73,7 @@ export const useProjects = () => {
           title: values.title,
           description: values.description || null,
           deadline: values.deadline || null,
+          priority: values.priority || 'medium',
           created_by: user.id,
         })
         .select();

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -15,11 +16,19 @@ import {
 } from '@/components/ui/form';
 import { DialogFooter } from '@/components/ui/dialog';
 import { Project } from '@/types/project';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const projectSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),
   description: z.string().optional(),
   deadline: z.string().optional(),
+  priority: z.enum(['low', 'medium', 'high']).default('medium'),
 });
 
 type ProjectFormValues = z.infer<typeof projectSchema>;
@@ -37,6 +46,7 @@ const EditProjectForm: React.FC<EditProjectFormProps> = ({ project, onSubmit, is
       title: project.title,
       description: project.description || '',
       deadline: project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : '',
+      priority: project.priority || 'medium',
     },
   });
 
@@ -75,6 +85,32 @@ const EditProjectForm: React.FC<EditProjectFormProps> = ({ project, onSubmit, is
                   className="resize-none min-h-[100px]"
                 />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        
+        <FormField
+          control={form.control}
+          name="priority"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Priority</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select priority" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
