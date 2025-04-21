@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,23 +33,16 @@ const DashboardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) 
     };
   }, [loading, navigate, location.pathname]);
 
-  // Redirect to sign in if not authenticated
+  // Redirect to sign in if not authenticated - keep this simple
   useEffect(() => {
     if (!loading) {
       if (loadingTimeout) clearTimeout(loadingTimeout);
       
       if (!user) {
-        // Save the current path before redirecting
-        if (location.pathname !== '/signin') {
-          localStorage.setItem('lastVisitedPath', location.pathname);
-        }
-        navigate('/signin', { 
-          replace: true,
-          state: { from: location.pathname }
-        });
+        navigate('/signin', { replace: true });
       }
     }
-  }, [user, loading, navigate, location.pathname]);
+  }, [user, loading, navigate]);
 
   if (loading) {
     return (

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import ProjectList from '@/components/projects/ProjectList';
@@ -31,10 +30,8 @@ const Projects: React.FC = () => {
   const [projectDialogOpen, setProjectDialogOpen] = useState(false);
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
 
-  // Store the current path in localStorage to preserve navigation
-  useEffect(() => {
-    localStorage.setItem('lastVisitedPath', location.pathname);
-  }, [location.pathname]);
+  // Remove the useEffect that stores path in localStorage
+  // This was causing part of the redirect chain
 
   const onSubmitProject = async (values: ProjectFormValues) => {
     const success = await createProject(values);

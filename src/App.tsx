@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -24,6 +25,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) {
+    // We still want to remember the path for when they log in
     localStorage.setItem('lastVisitedPath', window.location.pathname);
     return <Navigate to="/signin" replace />;
   }
@@ -40,6 +42,7 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (user) {
+    // Directly navigate to the main dashboard on login, not to "/"
     return <Navigate to="/dashboard" replace />;
   }
   
@@ -52,7 +55,7 @@ const AppRoutes = () => (
     <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
     <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
     
-    {/* Dashboard Routes */}
+    {/* Dashboard Routes - make the main Dashboard the primary route */}
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/dashboard/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
     <Route path="/dashboard/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
