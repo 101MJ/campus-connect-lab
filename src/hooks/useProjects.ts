@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,7 +31,20 @@ export const useProjects = () => {
           .order('created_at', { ascending: false });
         
         if (error) throw error;
-        return data || [];
+        
+        // Cast and validate the data to match our Project interface
+        return (data || []).map(project => ({
+          project_id: project.project_id,
+          title: project.title,
+          description: project.description || undefined,
+          deadline: project.deadline || undefined,
+          created_at: project.created_at,
+          created_by: project.created_by,
+          priority: (project.priority as 'low' | 'medium' | 'high') || 'medium',
+          status: (project.status as 'on_track' | 'at_risk' | 'delayed') || 'on_track',
+          total_tasks: project.total_tasks || 0,
+          completed_tasks: project.completed_tasks || 0
+        }));
       } catch (error: any) {
         console.error('Error fetching projects:', error);
         toast.error('Failed to load projects');
