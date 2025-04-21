@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Loader2 } from 'lucide-react';
 import TaskItem from './TaskItem';
 import TaskEditDialog from './TaskEditDialog';
@@ -13,7 +13,8 @@ interface TaskListProps {
   onTaskUpdated?: () => void;
 }
 
-const TaskList: React.FC<TaskListProps> = ({ 
+// Use memo for performance optimization
+const TaskList: React.FC<TaskListProps> = memo(({ 
   projectId, 
   showCompleted = false, 
   onTaskUpdated 
@@ -25,6 +26,7 @@ const TaskList: React.FC<TaskListProps> = ({
   const {
     tasks,
     isLoading,
+    isDeletingTask,
     handleStatusChange,
     handleDelete,
     handleUpdateTask
@@ -71,6 +73,7 @@ const TaskList: React.FC<TaskListProps> = ({
           onDelete={handleDelete}
           onStatusChange={handleStatusChange}
           onEdit={handleEdit}
+          isDeleting={isDeletingTask}
         />
       ))}
       
@@ -83,6 +86,8 @@ const TaskList: React.FC<TaskListProps> = ({
       />
     </div>
   );
-};
+});
+
+TaskList.displayName = 'TaskList';
 
 export default TaskList;

@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export interface Community {
   community_id: string;
@@ -14,62 +15,83 @@ export interface Community {
 
 export const useCommunityManager = () => {
   const { user } = useAuth();
-  const [communities, setCommunities] = useState<Community[]>([]);
-  const [myCommunities, setMyCommunities] = useState<Community[]>([]);
-  const [joinedCommunities, setJoinedCommunities] = useState<Community[]>([]);
+  const queryClient = useQueryClient();
   const [recommendedCommunities, setRecommendedCommunities] = useState<Community[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchCommunities = async () => {
-    setIsLoading(true);
-    try {
-      const { data: allCommunities, error: allError } = await supabase
+  // Fetch all communities
+  const { data: communities = [], isLoading: isLoadingAll } = useQuery({
+    queryKey: ['communities', 'all'],
+    queryFn: async (): Promise<Community[]> => {
+      const { data, error } = await supabase
         .from('communities')
         .select('*')
         .order('created_at', { ascending: false });
       
-      if (allError) throw allError;
+      if (error) throw error;
+      return data || [];
+    },
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false
+  });
+
+  // Fetch communities created by the user
+  const { data: myCommunities = [], isLoading: isLoadingMy } = useQuery({
+    queryKey: ['communities', 'created', user?.id],
+    queryFn: async (): Promise<Community[]> => {
+      if (!user) return [];
       
-      const { data: userCommunities, error: userError } = await supabase
+      const { data, error } = await supabase
         .from('communities')
         .select('*')
-        .eq('created_by', user!.id)
+        .eq('created_by', user.id)
         .order('created_at', { ascending: false });
       
-      if (userError) throw userError;
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!user,
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false
+  });
+
+  // Fetch joined communities
+  const { data: joinedCommunities = [], isLoading: isLoadingJoined } = useQuery({
+    queryKey: ['communities', 'joined', user?.id],
+    queryFn: async (): Promise<Community[]> => {
+      if (!user) return [];
       
+      // Get memberships
       const { data: memberships, error: membershipsError } = await supabase
         .from('community_members')
         .select('community_id')
-        .eq('user_id', user!.id);
+        .eq('user_id', user.id);
         
       if (membershipsError) throw membershipsError;
       
       const joinedCommunityIds = memberships?.map(m => m.community_id) || [];
       
-      let joined: Community[] = [];
-      if (joinedCommunityIds.length > 0) {
-        const { data: joinedData, error: joinedError } = await supabase
-          .from('communities')
-          .select('*')
-          .in('community_id', joinedCommunityIds)
-          .order('created_at', { ascending: false });
-          
-        if (joinedError) throw joinedError;
-        joined = joinedData || [];
-      }
+      if (joinedCommunityIds.length === 0) return [];
       
-      setCommunities(allCommunities || []);
-      setMyCommunities(userCommunities || []);
-      setJoinedCommunities(joined);
+      // Get joined communities
+      const { data: joinedData, error: joinedError } = await supabase
+        .from('communities')
+        .select('*')
+        .in('community_id', joinedCommunityIds)
+        .order('created_at', { ascending: false });
+          
+      if (joinedError) throw joinedError;
+      return joinedData || [];
+    },
+    enabled: !!user,
+    staleTime: 60000, // 1 minute
+    refetchOnWindowFocus: false
+  });
 
-    } catch (error: any) {
-      console.error('Error fetching communities:', error);
-      toast.error('Failed to load communities');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const isLoading = isLoadingAll || isLoadingMy || isLoadingJoined;
+
+  const fetchCommunities = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['communities'] });
+  }, [queryClient]);
 
   const createCommunity = async (name: string, description?: string) => {
     if (!user) return null;
@@ -86,10 +108,17 @@ export const useCommunityManager = () => {
       
       if (error) throw error;
       
-      setCommunities(prev => [...(data || []), ...prev]);
-      setMyCommunities(prev => [...(data || []), ...prev]);
+      // Update caches
+      queryClient.invalidateQueries({ 
+        queryKey: ['communities', 'all'] 
+      });
+      
+      queryClient.invalidateQueries({ 
+        queryKey: ['communities', 'created', user.id]
+      });
 
       if (data && data.length > 0) {
+        // Add user as a member
         await supabase
           .from('community_members')
           .insert({
@@ -97,8 +126,10 @@ export const useCommunityManager = () => {
             user_id: user.id
           });
         
-        setJoinedCommunities(prev => [...(data || []), ...prev]);
-        await fetchCommunities();
+        // Invalidate joined communities
+        queryClient.invalidateQueries({ 
+          queryKey: ['communities', 'joined', user.id] 
+        });
       }
 
       return data?.[0] || null;
@@ -108,12 +139,6 @@ export const useCommunityManager = () => {
       return null;
     }
   };
-
-  useEffect(() => {
-    if (user) {
-      fetchCommunities();
-    }
-  }, [user]);
 
   return {
     communities,

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import PostCard from './PostCard';
@@ -12,11 +12,12 @@ interface PostListProps {
 }
 
 const POSTS_PER_PAGE = {
-  DESKTOP: 15,
-  MOBILE: 8
+  DESKTOP: 10,
+  MOBILE: 5
 };
 
-const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
+// Use memo to prevent unnecessary re-renders
+const PostList: React.FC<PostListProps> = memo(({ communityId, isMember }) => {
   const { posts, loading, reactions, setReactions, fetchPosts } = usePostList(communityId);
   const [visiblePosts, setVisiblePosts] = useState<number>(window.innerWidth >= 768 ? POSTS_PER_PAGE.DESKTOP : POSTS_PER_PAGE.MOBILE);
   const [hasMore, setHasMore] = useState<boolean>(true);
@@ -26,7 +27,12 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
   // Handle window resize for responsive post count
   useEffect(() => {
     const handleResize = () => {
-      setVisiblePosts(window.innerWidth >= 768 ? POSTS_PER_PAGE.DESKTOP : POSTS_PER_PAGE.MOBILE);
+      setVisiblePosts(prev => {
+        // Only reset if changing screen size category
+        const newSize = window.innerWidth >= 768 ? POSTS_PER_PAGE.DESKTOP : POSTS_PER_PAGE.MOBILE;
+        const prevSize = prev <= POSTS_PER_PAGE.MOBILE ? POSTS_PER_PAGE.MOBILE : POSTS_PER_PAGE.DESKTOP;
+        return prevSize !== newSize ? newSize : prev;
+      });
     };
     
     window.addEventListener('resize', handleResize);
@@ -38,7 +44,7 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
     setHasMore(posts.length > visiblePosts);
   }, [posts.length, visiblePosts]);
 
-  // Set up intersection observer for infinite scroll
+  // Set up intersection observer for infinite scroll - optimized
   const lastPostElementRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
     
@@ -51,18 +57,18 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
           return prevVisiblePosts + increment;
         });
       }
-    });
+    }, { rootMargin: '100px' });
     
     if (node) observer.current.observe(node);
     lastPostRef.current = node;
   }, [loading, hasMore]);
 
-  const handleReactionUpdate = (postId: string, updatedReaction: any) => {
+  const handleReactionUpdate = useCallback((postId: string, updatedReaction: any) => {
     setReactions(prev => ({
       ...prev,
       [postId]: updatedReaction
     }));
-  };
+  }, [setReactions]);
 
   if (loading) {
     return (
@@ -93,10 +99,13 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
     );
   }
 
+  // Use visiblePosts to limit rendered items for better performance
+  const visiblePostsList = posts.slice(0, visiblePosts);
+
   return (
     <div className="space-y-6 relative pb-10">
-      {posts.slice(0, visiblePosts).map((post, index) => {
-        const isLastPost = index === visiblePosts - 1;
+      {visiblePostsList.map((post, index) => {
+        const isLastPost = index === visiblePostsList.length - 1;
         
         return (
           <div key={post.post_id} ref={isLastPost ? lastPostElementRef : null}>
@@ -116,8 +125,14 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
           <Loader2 className="w-6 h-6 animate-spin text-collabCorner-purple" />
         </div>
       )}
+      
+      {hasMore && !loading && (
+        <div className="h-10" /> // Space for intersection observer
+      )}
     </div>
   );
-};
+});
+
+PostList.displayName = 'PostList';
 
 export default PostList;

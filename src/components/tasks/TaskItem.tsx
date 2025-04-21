@@ -1,9 +1,15 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Trash2, CalendarDays, Edit } from 'lucide-react';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { 
+  Edit2, 
+  Calendar, 
+  Trash2, 
+  CheckCircle, 
+  Loader2 
+} from 'lucide-react';
 import { Task } from '@/types/task';
 
 interface TaskItemProps {
@@ -11,13 +17,16 @@ interface TaskItemProps {
   onDelete: (taskId: string) => void;
   onStatusChange: (taskId: string, isCompleted: boolean) => void;
   onEdit: (taskId: string) => void;
+  isDeleting?: boolean;
 }
 
-const TaskItem: React.FC<TaskItemProps> = ({ task, onDelete, onStatusChange, onEdit }) => {
-  const handleStatusChange = async (checked: boolean) => {
-    onStatusChange(task.task_id, checked);
-  };
-
+const TaskItem: React.FC<TaskItemProps> = ({ 
+  task, 
+  onDelete, 
+  onStatusChange, 
+  onEdit,
+  isDeleting = false
+}) => {
   const formatDate = (dateString: string | null) => {
     if (!dateString) return 'No deadline';
     try {
@@ -28,59 +37,74 @@ const TaskItem: React.FC<TaskItemProps> = ({ task, onDelete, onStatusChange, onE
   };
 
   return (
-    <Card className={`border-l-4 ${task.is_completed ? 'border-l-green-500' : 'border-l-amber-500'} bg-gradient-to-r ${task.is_completed ? 'from-green-50/50 to-white' : 'from-amber-50/50 to-white'}`}>
-      <CardContent className="p-3">
-        <div className="flex items-start gap-3 relative">
-          <Checkbox 
-            checked={task.is_completed} 
-            onCheckedChange={handleStatusChange}
-            className="mt-1"
+    <Card className={`hover:shadow transition-shadow duration-200 relative ${
+      task.is_completed ? 'bg-muted/20' : 'bg-card'
+    }`}>
+      <CardContent className="p-4 flex items-start">
+        <div className="flex-shrink-0 mt-1">
+          <Checkbox
+            checked={task.is_completed}
+            onCheckedChange={(checked) => onStatusChange(task.task_id, Boolean(checked))}
+            className={task.is_completed ? 'text-green-500' : ''}
           />
-          <div className="flex-1">
-            <h3 className={`text-lg font-medium ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
-              {task.title}
-            </h3>
-            {task.description && (
-              <p className="text-muted-foreground mt-1 text-sm">
-                {task.description}
-              </p>
-            )}
-            {task.notes && (
-              <div className="mt-2 bg-white/80 p-2 rounded text-sm">
-                <p className="font-medium">Notes:</p>
-                <p className="text-muted-foreground">{task.notes}</p>
-              </div>
-            )}
+        </div>
+        
+        <div className="ml-3 flex-1">
+          <div className={`text-base font-medium ${task.is_completed ? 'line-through text-muted-foreground' : ''}`}>
+            {task.title}
           </div>
           
+          {task.description && (
+            <p className={`mt-1 text-sm ${task.is_completed ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
+              {task.description}
+            </p>
+          )}
+          
+          {task.notes && (
+            <p className="mt-2 text-xs p-2 bg-muted rounded-sm">
+              {task.notes}
+            </p>
+          )}
+          
           {task.deadline && (
-            <div className="absolute top-0 right-0">
-              <div className="flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                <CalendarDays className="h-3 w-3" />
-                <span>{format(new Date(task.deadline), 'MMM d')}</span>
-              </div>
+            <div className="mt-2 flex items-center text-xs text-muted-foreground">
+              <Calendar className="h-3 w-3 mr-1" /> 
+              Due: {formatDate(task.deadline)}
             </div>
           )}
         </div>
+        
+        <div className="flex items-center space-x-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(task.task_id)}
+            className="h-8 w-8 p-0"
+          >
+            <span className="sr-only">Edit</span>
+            <Edit2 className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(task.task_id)}
+            className="h-8 w-8 p-0 text-destructive"
+            disabled={isDeleting}
+          >
+            <span className="sr-only">Delete</span>
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+          </Button>
+          
+          {task.is_completed && (
+            <CheckCircle className="h-4 w-4 text-green-500" />
+          )}
+        </div>
       </CardContent>
-      <CardFooter className="flex justify-end p-1 gap-1">
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => onEdit(task.task_id)}
-          className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 h-8 w-8"
-        >
-          <Edit className="h-4 w-4" />
-        </Button>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={() => onDelete(task.task_id)}
-          className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

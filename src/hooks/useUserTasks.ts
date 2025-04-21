@@ -1,5 +1,5 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -16,6 +16,7 @@ interface Task {
 
 export function useUserTasks() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   return useQuery({
     queryKey: ['userTasks', user?.id],
@@ -41,5 +42,7 @@ export function useUserTasks() {
       return data || [];
     },
     enabled: !!user,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+    refetchOnWindowFocus: false
   });
 }

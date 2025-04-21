@@ -1,8 +1,9 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
 
 interface Project {
@@ -16,40 +17,48 @@ interface Project {
 
 export const useProjects = () => {
   const { user } = useAuth();
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
   const [selectedProject, setSelectedProject] = useState<string | null>(null);
   
-  const fetchProjects = useCallback(async () => {
-    if (!user) return;
-    
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('created_by', user.id)
-        .order('created_at', { ascending: false });
+  // Use React Query for data fetching with caching
+  const { 
+    data: projects = [], 
+    isLoading, 
+    refetch 
+  } = useQuery({
+    queryKey: ['projects', user?.id],
+    queryFn: async (): Promise<Project[]> => {
+      if (!user) return [];
       
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error: any) {
-      console.error('Error fetching projects:', error);
-      toast.error('Failed to load projects');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('created_by', user.id)
+          .order('created_at', { ascending: false });
+        
+        if (error) throw error;
+        return data || [];
+      } catch (error: any) {
+        console.error('Error fetching projects:', error);
+        toast.error('Failed to load projects');
+        return [];
+      }
+    },
+    enabled: !!user,
+    staleTime: 60000, // Data considered fresh for 60 seconds
+    refetchOnWindowFocus: false
+  });
 
-  useEffect(() => {
+  const fetchProjects = useCallback(() => {
     if (user) {
-      fetchProjects();
+      refetch();
     }
-  }, [user, fetchProjects]);
+  }, [refetch, user]);
 
   const createProject = async (values: ProjectFormValues) => {
-    if (!user) return;
+    if (!user) return false;
     
     setIsCreating(true);
     try {
@@ -65,7 +74,12 @@ export const useProjects = () => {
       
       if (error) throw error;
       
-      setProjects([...(data || []), ...projects]);
+      // Update cache
+      if (data && data.length > 0) {
+        queryClient.setQueryData(['projects', user.id], 
+          (oldData: Project[] | undefined) => [...(data || []), ...(oldData || [])]);
+      }
+      
       toast.success('Project created successfully');
       return true;
     } catch (error: any) {
@@ -81,6 +95,11 @@ export const useProjects = () => {
     if (!confirm('Are you sure you want to delete this project?')) return;
     
     try {
+      // Optimistically update UI
+      queryClient.setQueryData(['projects', user?.id], 
+        (oldData: Project[] | undefined) => 
+          (oldData || []).filter(project => project.project_id !== projectId));
+      
       const { error } = await supabase
         .from('projects')
         .delete()
@@ -88,23 +107,29 @@ export const useProjects = () => {
       
       if (error) throw error;
       
-      setProjects(projects.filter(project => project.project_id !== projectId));
-      
       if (selectedProject === projectId) {
         setSelectedProject(null);
       }
       
       toast.success('Project deleted successfully');
+      
+      // Invalidate related queries
+      queryClient.invalidateQueries({
+        queryKey: ['tasks'],
+        exact: false
+      });
     } catch (error: any) {
       console.error('Error deleting project:', error);
       toast.error(error.message || 'Failed to delete project');
+      // Revert optimistic update
+      refetch();
     }
   };
 
-  const getProjectById = (projectId: string | null) => {
+  const getProjectById = useCallback((projectId: string | null) => {
     if (!projectId) return null;
     return projects.find(project => project.project_id === projectId) || null;
-  };
+  }, [projects]);
 
   return {
     projects,
