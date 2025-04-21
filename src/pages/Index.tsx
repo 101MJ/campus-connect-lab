@@ -10,12 +10,9 @@ import Footer from '@/components/Footer';
 const Index = () => {
   const navigate = useNavigate();
   
-  // Redirect to dashboard for testing purposes
-  React.useEffect(() => {
-    // Uncomment this line to automatically redirect to dashboard for testing
-    navigate('/dashboard');
-  }, [navigate]);
-
+  // Remove automatic redirect to dashboard
+  // This was likely part of the issue causing multiple redirects
+  
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <Navbar />

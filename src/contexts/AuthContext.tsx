@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -104,15 +103,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (data.user) {
         await fetchUserProfile(data.user.id);
       }
-
-      // After successful sign in, check if there's a last visited path
-      const lastVisitedPath = localStorage.getItem('lastVisitedPath');
-      if (lastVisitedPath && lastVisitedPath !== '/signin' && lastVisitedPath !== '/signup') {
-        // Return the path so the login component can redirect
-        return { success: true, redirectPath: lastVisitedPath };
-      }
       
-      return { success: true, redirectPath: '/dashboard' };
+      // Simplified return - the SignIn component will handle navigation directly
+      return { success: true };
     } catch (error: any) {
       console.error('Error signing in:', error);
       return { success: false, error: error.message || 'An error occurred during sign in' };
@@ -161,7 +154,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     <AuthContext.Provider
       value={{
         user,
-        profile, // Include profile in the context value
+        profile,
         loading,
         signIn,
         signUp,

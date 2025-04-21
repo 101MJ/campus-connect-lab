@@ -42,9 +42,10 @@ const SignIn: React.FC = () => {
   const handleSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
     try {
-      const { success, error, redirectPath } = await signIn(values.email, values.password);
+      const { success, error } = await signIn(values.email, values.password);
       if (success) {
-        navigate(redirectPath || '/dashboard');
+        // Direct navigation to dashboard profile page without checking redirectPath
+        navigate('/dashboard', { replace: true });
       } else if (error) {
         form.setError('root', { message: error });
       }
