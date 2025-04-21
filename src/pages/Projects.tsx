@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import ProjectList from '@/components/projects/ProjectList';
@@ -10,6 +11,7 @@ import { useTaskManagement } from '@/hooks/useTaskManagement';
 import { useAuth } from '@/contexts/AuthContext';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
 import { useLocation } from 'react-router-dom';
+import { Project } from '@/types/project';
 
 const Projects: React.FC = () => {
   const { user } = useAuth();

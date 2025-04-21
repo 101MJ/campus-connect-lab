@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -15,7 +14,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { DialogFooter } from '@/components/ui/dialog';
-import { Project } from '@/components/projects/ProjectDetails';
+import { Project } from '@/types/project';
 
 const projectSchema = z.object({
   title: z.string().min(2, 'Title must be at least 2 characters'),

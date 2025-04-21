@@ -16,18 +16,7 @@ import {
 import EditProjectForm from './EditProjectForm';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-
-export interface Project {
-  project_id: string;
-  title: string;
-  description?: string;
-  deadline?: string;
-  created_at: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'on_track' | 'at_risk' | 'delayed';
-  total_tasks: number;
-  completed_tasks: number;
-}
+import { Project } from '@/types/project';
 
 interface ProjectDetailsProps {
   project: Project;

@@ -1,19 +1,10 @@
-
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
-
-interface Project {
-  project_id: string;
-  title: string;
-  description?: string;
-  deadline?: string;
-  created_at: string;
-  created_by: string;
-}
+import { Project } from '@/types/project';
 
 export const useProjects = () => {
   const { user } = useAuth();

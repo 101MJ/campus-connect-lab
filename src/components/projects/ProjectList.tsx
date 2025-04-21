@@ -4,18 +4,7 @@ import { Card, CardHeader, CardTitle, CardFooter, CardDescription } from '@/comp
 import { Button } from '@/components/ui/button';
 import { FolderGit2, Calendar, Trash2 } from 'lucide-react';
 import ProjectProgress from './ProjectProgress';
-
-interface Project {
-  project_id: string;
-  title: string;
-  description?: string;
-  deadline?: string;
-  created_at: string;
-  priority: 'low' | 'medium' | 'high';
-  status: 'on_track' | 'at_risk' | 'delayed';
-  total_tasks: number;
-  completed_tasks: number;
-}
+import { Project } from '@/types/project';
 
 interface ProjectListProps {
   projects: Project[];
