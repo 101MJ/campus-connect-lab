@@ -1,9 +1,10 @@
+
 import React, { useState } from 'react';
 import ProjectFormDialog from './ProjectFormDialog';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
 import ShareProjectDialog from './ShareProjectDialog';
 import { Plus, Users } from 'lucide-react';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/button';
 
 interface ProjectHeaderProps {
   projectDialogOpen: boolean;

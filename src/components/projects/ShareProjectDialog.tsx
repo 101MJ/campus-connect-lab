@@ -39,7 +39,12 @@ const ShareProjectDialog: React.FC<ShareProjectDialogProps> = ({
   });
 
   const onSubmit = async (values: z.infer<typeof inviteSchema>) => {
-    const success = await inviteMember(values);
+    // Here we ensure both email and role are sent to inviteMember
+    const success = await inviteMember({
+      email: values.email,
+      role: values.role
+    });
+    
     if (success) {
       form.reset();
     }

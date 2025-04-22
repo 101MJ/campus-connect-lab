@@ -12,7 +12,7 @@ interface ProjectMember {
   joined_at: string;
 }
 
-interface Invitation {
+export interface Invitation {
   email: string;
   role: 'owner' | 'editor' | 'viewer';
 }
