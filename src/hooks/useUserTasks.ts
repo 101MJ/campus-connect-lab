@@ -31,7 +31,7 @@ export function useUserTasks() {
           deadline,
           is_completed,
           created_at,
-          project:projects(title)
+          project:project_id(title)
         `)
         .eq('created_by', user.id)
         .eq('is_completed', false)
