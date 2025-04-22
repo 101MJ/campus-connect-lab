@@ -201,65 +201,27 @@ export type Database = {
         }
         Relationships: []
       }
-      project_invitations: {
-        Row: {
-          created_at: string | null
-          email: string
-          expires_at: string | null
-          id: string
-          project_id: string | null
-          role: Database["public"]["Enums"]["project_role"]
-          token: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          expires_at?: string | null
-          id?: string
-          project_id?: string | null
-          role?: Database["public"]["Enums"]["project_role"]
-          token?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          expires_at?: string | null
-          id?: string
-          project_id?: string | null
-          role?: Database["public"]["Enums"]["project_role"]
-          token?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_invitations_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["project_id"]
-          },
-        ]
-      }
       project_members: {
         Row: {
+          created_at: string | null
           id: string
-          joined_at: string | null
-          project_id: string | null
-          role: Database["public"]["Enums"]["project_role"]
-          user_id: string | null
+          project_id: string
+          role: string
+          user_id: string
         }
         Insert: {
+          created_at?: string | null
           id?: string
-          joined_at?: string | null
-          project_id?: string | null
-          role?: Database["public"]["Enums"]["project_role"]
-          user_id?: string | null
+          project_id: string
+          role?: string
+          user_id: string
         }
         Update: {
+          created_at?: string | null
           id?: string
-          joined_at?: string | null
-          project_id?: string | null
-          role?: Database["public"]["Enums"]["project_role"]
-          user_id?: string | null
+          project_id?: string
+          role?: string
+          user_id?: string
         }
         Relationships: [
           {

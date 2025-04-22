@@ -31,7 +31,7 @@ export function useUserTasks() {
           deadline,
           is_completed,
           created_at,
-          project:project_id(title)
+          project:projects!project_id(title)
         `)
         .eq('created_by', user.id)
         .eq('is_completed', false)
@@ -42,7 +42,7 @@ export function useUserTasks() {
       return data || [];
     },
     enabled: !!user,
-    staleTime: 30000, // Consider data fresh for 30 seconds
+    staleTime: 30000,
     refetchOnWindowFocus: false
   });
 }
