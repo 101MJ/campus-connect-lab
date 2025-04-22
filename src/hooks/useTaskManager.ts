@@ -25,7 +25,7 @@ export function useTaskManager(projectId: string | null, showCompleted: boolean 
           .select('*')
           .eq('project_id', projectId)
           .eq('is_completed', showCompleted)
-          .order('deadline', { ascending: true, nullsFirst: false });
+          .order('deadline', { ascending: true });
         
         if (error) throw error;
         return data || [];

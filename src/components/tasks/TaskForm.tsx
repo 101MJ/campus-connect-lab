@@ -22,7 +22,7 @@ const taskSchema = z.object({
   notes: z.string().optional(),
 });
 
-type TaskFormValues = z.infer<typeof taskSchema>;
+export type TaskFormValues = z.infer<typeof taskSchema>;
 
 interface TaskFormProps {
   projectId: string;
