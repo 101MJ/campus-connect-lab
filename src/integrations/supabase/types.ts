@@ -201,76 +201,6 @@ export type Database = {
         }
         Relationships: []
       }
-      project_invitations: {
-        Row: {
-          created_at: string | null
-          email: string
-          expires_at: string | null
-          id: string
-          project_id: string | null
-          role: Database["public"]["Enums"]["project_role"]
-          token: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          email: string
-          expires_at?: string | null
-          id?: string
-          project_id?: string | null
-          role?: Database["public"]["Enums"]["project_role"]
-          token?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          email?: string
-          expires_at?: string | null
-          id?: string
-          project_id?: string | null
-          role?: Database["public"]["Enums"]["project_role"]
-          token?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_invitations_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["project_id"]
-          },
-        ]
-      }
-      project_members: {
-        Row: {
-          id: string
-          joined_at: string | null
-          project_id: string | null
-          role: Database["public"]["Enums"]["project_role"]
-          user_id: string | null
-        }
-        Insert: {
-          id?: string
-          joined_at?: string | null
-          project_id?: string | null
-          role?: Database["public"]["Enums"]["project_role"]
-          user_id?: string | null
-        }
-        Update: {
-          id?: string
-          joined_at?: string | null
-          project_id?: string | null
-          role?: Database["public"]["Enums"]["project_role"]
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_members_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["project_id"]
-          },
-        ]
-      }
       projects: {
         Row: {
           completed_tasks: number | null
@@ -357,7 +287,6 @@ export type Database = {
       }
       tasks: {
         Row: {
-          assigned_to: string | null
           created_at: string | null
           created_by: string
           deadline: string | null
@@ -370,7 +299,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          assigned_to?: string | null
           created_at?: string | null
           created_by: string
           deadline?: string | null
@@ -383,7 +311,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          assigned_to?: string | null
           created_at?: string | null
           created_by?: string
           deadline?: string | null
@@ -565,7 +492,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      project_role: "owner" | "editor" | "viewer"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -680,8 +607,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      project_role: ["owner", "editor", "viewer"],
-    },
+    Enums: {},
   },
 } as const
