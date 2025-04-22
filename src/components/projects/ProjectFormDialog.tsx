@@ -6,10 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
 import ProjectForm from '@/components/projects/ProjectForm';
 import type { ProjectFormValues } from '@/components/projects/ProjectForm';
 
@@ -28,11 +25,6 @@ const ProjectFormDialog: React.FC<ProjectFormDialogProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button className="bg-collabCorner-purple hover:bg-collabCorner-purple-dark transition-colors">
-          <Plus className="mr-2 h-4 w-4" /> New Project
-        </Button>
-      </DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
           <DialogTitle>Create New Project</DialogTitle>
