@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { 
   Edit2, 
   Calendar, 
@@ -13,7 +14,9 @@ import {
 import { Task } from '@/types/task';
 
 interface TaskItemProps {
-  task: Task;
+  task: Task & {
+    assigned_to?: string | null;
+  };
   onDelete: (taskId: string) => void;
   onStatusChange: (taskId: string, isCompleted: boolean) => void;
   onEdit: (taskId: string) => void;
@@ -73,6 +76,14 @@ const TaskItem: React.FC<TaskItemProps> = ({
             </div>
           )}
         </div>
+        
+        {task.assigned_to && (
+          <div className="absolute top-2 right-16">
+            <Avatar className="h-6 w-6">
+              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${task.assigned_to}`} />
+            </Avatar>
+          </div>
+        )}
         
         <div className="flex items-center space-x-1">
           <Button
