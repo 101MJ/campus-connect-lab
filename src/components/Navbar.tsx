@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { BookOpen, LogOut, User, LayoutDashboard } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/components/ui/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,6 +16,25 @@ import {
 
 const Navbar = () => {
   const { user, profile, signOut } = useAuth();
+
+  const handleSignOut = async (e) => {
+    e.preventDefault();
+    try {
+      await signOut();
+      // Navigation is handled in the AuthContext's signOut function
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account",
+      });
+    } catch (error) {
+      console.error("Sign out error:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign out failed",
+        description: "There was a problem signing you out. Please try again.",
+      });
+    }
+  };
 
   return (
     <nav className="w-full py-4 px-6 md:px-12 flex justify-between items-center bg-white shadow-sm">
@@ -40,7 +60,7 @@ const Navbar = () => {
                   <span>Dashboard</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => signOut()} className="text-red-600 cursor-pointer">
+              <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Log out</span>
               </DropdownMenuItem>

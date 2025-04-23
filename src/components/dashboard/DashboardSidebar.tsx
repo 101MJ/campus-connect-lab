@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { BookOpen, Briefcase, Users, Settings, LogOut, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { toast } from '@/components/ui/use-toast';
 
 const DashboardSidebar = () => {
   const { signOut } = useAuth();
@@ -16,6 +18,25 @@ const DashboardSidebar = () => {
     { name: 'Communities', icon: Users, path: '/dashboard/communities' },
     { name: 'Settings', icon: Settings, path: '/dashboard/settings' }
   ];
+
+  const handleSignOut = async (e) => {
+    e.preventDefault();
+    try {
+      await signOut();
+      // The navigation is handled in the AuthContext's signOut function
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account",
+      });
+    } catch (error) {
+      console.error("Sign out error:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign out failed",
+        description: "There was a problem signing you out. Please try again.",
+      });
+    }
+  };
 
   return (
     <div className={cn(
@@ -73,7 +94,7 @@ const DashboardSidebar = () => {
             "flex items-center gap-2 justify-center w-full",
             isCollapsed && "p-2"
           )}
-          onClick={signOut}
+          onClick={handleSignOut}
           title={isCollapsed ? "Sign Out" : undefined}
         >
           <LogOut className="w-4 h-4" />

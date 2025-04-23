@@ -14,11 +14,11 @@ export interface Profile {
 
 interface AuthContextType {
   user: any | null;
-  profile: Profile | null; // Add profile to context type
+  profile: Profile | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string; redirectPath?: string }>;
   signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  signOut: () => void;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,7 +33,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState<Profile | null>(null); // Add profile state
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -73,7 +73,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     session()
 
-    supabase.auth.onAuthStateChange(async (_event, session) => {
+    // Use the auth state change event to keep the user state in sync
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setUser(session?.user ?? null)
       
       // Fetch user profile if user exists after auth state change
@@ -85,6 +86,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       setLoading(false)
     })
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    }
   }, []);
 
   async function signIn(email: string, password: string) {
@@ -139,12 +145,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   async function signOut() {
     try {
       setLoading(true);
-      await supabase.auth.signOut();
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // Clear user and profile state immediately after successful signout
       setUser(null);
-      setProfile(null); // Clear profile on sign out
-      navigate('/signin');
+      setProfile(null);
+      
+      // Navigate after state is cleared
+      navigate('/signin', { replace: true });
     } catch (error: any) {
       console.error('Error signing out:', error);
+      throw error; // Re-throw to be handled by the component
     } finally {
       setLoading(false);
     }
