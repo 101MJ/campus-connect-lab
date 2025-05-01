@@ -13,18 +13,33 @@ import Projects from "./pages/Projects";
 import Communities from "./pages/Communities";
 import ProfileSettings from "./pages/ProfileSettings";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 30000),
+      staleTime: 5000,
+    },
+  }
+});
 
-// Protected route component
+// Protected route component with improved loading state
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="h-12 w-12 animate-spin text-collabCorner-purple mb-4" />
+        <p className="text-lg font-medium text-gray-700">Verifying your account...</p>
+      </div>
+    );
   }
   
   if (!user) {
+    console.log('Protected route accessed without authentication, redirecting to signin');
     // We still want to remember the path for when they log in
     localStorage.setItem('lastVisitedPath', window.location.pathname);
     return <Navigate to="/signin" replace />;
@@ -38,7 +53,12 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
+        <Loader2 className="h-8 w-8 animate-spin text-collabCorner-purple mb-2" />
+        <p className="text-gray-700">Loading...</p>
+      </div>
+    );
   }
   
   if (user) {
