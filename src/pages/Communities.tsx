@@ -9,8 +9,10 @@ import CommunityDetail from '@/components/communities/CommunityDetail';
 import CommunitySidebar from '@/components/communities/CommunitySidebar';
 import CreateCommunityDialog from '@/components/communities/CreateCommunityDialog';
 import EmptyCommunityState from '@/components/communities/EmptyCommunityState';
+import PostTagsFilter from '@/components/communities/PostTagsFilter';
 import { useCommunityManager } from '@/hooks/useCommunityManager';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
+import { motion } from '@/components/ui/motion';
 
 const Communities = () => {
   const { user } = useAuth();
@@ -19,6 +21,7 @@ const Communities = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCommunities, setFilteredCommunities] = useState<any[]>([]);
   const [animate, setAnimate] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const { 
     communities,
@@ -66,6 +69,10 @@ const Communities = () => {
     }, 300);
   };
 
+  const handleFilterChange = (tags: string[]) => {
+    setSelectedTags(tags);
+  };
+
   if (selectedCommunity) {
     return (
       <DashboardLayout>
@@ -89,6 +96,21 @@ const Communities = () => {
             </h1>
             <CreateCommunityDialog onCreateSuccess={createCommunity} />
           </div>
+          
+          {/* Mobile sidebar integration (visible on small screens) */}
+          <CommunitySidebar 
+            myCommunities={myCommunities}
+            joinedCommunities={joinedCommunities}
+            recentPosts={sortedRecentPosts}
+            loading={isLoading}
+            onViewCommunity={handleViewCommunity}
+            onSearch={handleSearch}
+          />
+
+          {/* Post tags filter */}
+          {(joinedCommunities.length > 0 || filteredCommunities.length > 0) && (
+            <PostTagsFilter onFilterChange={handleFilterChange} />
+          )}
 
           {searchQuery && filteredCommunities.length > 0 && (
             <Card className="animate-fade-in">
@@ -121,10 +143,11 @@ const Communities = () => {
                 {joinedCommunities.length > 0 && (
                   <div className="space-y-6">
                     {sortedRecentPosts.map((post, index) => (
-                      <div 
+                      <motion.div
                         key={post.post_id} 
-                        className={`cursor-pointer animate-fade-in transition-all duration-300`}
-                        style={{ animationDelay: `${index * 50}ms` }}
+                        className="cursor-pointer transition-all duration-300"
+                        animate="fadeIn"
+                        delay={index < 5 ? (index === 0 ? 'none' : 'short') : 'none'}
                         onClick={() => handleViewCommunity(post.community_id)}
                       >
                         <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-collabCorner-blue/10 hover:to-collabCorner-purple/10">
@@ -136,17 +159,18 @@ const Communities = () => {
                             <p className="mt-2 line-clamp-2">{post.content}</p>
                           </CardContent>
                         </Card>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 )}
               </CardContent>
             </Card>
           ) : (
-            <EmptyCommunityState onCreateClick={() => setDialogOpen(true)} />
+            !searchQuery && <EmptyCommunityState onCreateClick={() => setDialogOpen(true)} />
           )}
         </div>
 
+        {/* Desktop sidebar (hidden on small screens) */}
         <CommunitySidebar 
           myCommunities={myCommunities}
           joinedCommunities={joinedCommunities}

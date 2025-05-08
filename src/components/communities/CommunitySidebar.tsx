@@ -1,11 +1,15 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { Clock, Search, Users } from 'lucide-react';
+import { Clock, Search, Users, Menu, X, Filter, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { RecentPost } from '@/hooks/useRecentPosts';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Community {
   community_id: string;
@@ -31,14 +35,15 @@ const CommunitySidebar = ({
   onSearch,
 }: CommunitySidebarProps) => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   // Sort posts by date in descending order
   const sortedPosts = [...recentPosts].sort((a, b) => 
     new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
-  return (
-    <aside className="hidden md:block w-80 space-y-6 pl-6">
+  const SidebarContent = () => (
+    <div className="space-y-6 w-full">
       {/* Search Bar */}
       <Card>
         <CardHeader className="pb-3">
@@ -143,6 +148,32 @@ const CommunitySidebar = ({
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+
+  // Mobile sidebar version using Sheet component
+  if (isMobile) {
+    return (
+      <div className="block md:hidden mb-4">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" size="icon" className="ml-auto">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle sidebar</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="w-[300px] sm:w-[350px] overflow-y-auto">
+            <SidebarContent />
+          </SheetContent>
+        </Sheet>
+      </div>
+    );
+  }
+
+  // Desktop sidebar version
+  return (
+    <aside className="hidden md:block w-80 space-y-6 pl-6">
+      <SidebarContent />
     </aside>
   );
 };

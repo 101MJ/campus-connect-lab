@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { format } from 'date-fns';
-import { MessageSquare, User, Trash2 } from 'lucide-react';
+import { MessageSquare, User, Trash2, Tag } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -9,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import PostComments from './PostComments';
 import PostReaction from './PostReaction';
+import { Badge } from '@/components/ui/badge';
 import type { Post } from '@/hooks/usePostList';
 import type { PostReaction as PostReactionType } from '@/hooks/usePostReactions';
 import EditPostDialog from './EditPostDialog';
@@ -19,6 +19,7 @@ interface PostCardProps {
   isMember: boolean;
   onReactionUpdate: (postId: string, updatedReaction: PostReactionType) => void;
   onPostUpdated: () => void;
+  filterTags?: string[];
 }
 
 const PostCard: React.FC<PostCardProps> = ({
@@ -27,10 +28,38 @@ const PostCard: React.FC<PostCardProps> = ({
   isMember,
   onReactionUpdate,
   onPostUpdated,
+  filterTags = [],
 }) => {
   const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Get or generate post tags
+  const getPostTags = () => {
+    // If the post has tags property, use those
+    if (post.tags) return post.tags;
+    
+    // Otherwise generate some based on content
+    const tags: string[] = [];
+    const content = post.content?.toLowerCase() || '';
+    const title = post.title?.toLowerCase() || '';
+    
+    if (content.includes('question') || title.includes('?')) tags.push('Question');
+    if (content.includes('announcement') || title.includes('announcement')) tags.push('Announcement');
+    if (content.includes('event') || title.includes('event')) tags.push('Event');
+    if (content.includes('help') || title.includes('help')) tags.push('Help');
+    if (content.includes('project') || title.includes('project')) tags.push('Project');
+    if (tags.length === 0) tags.push('Discussion');
+    
+    return tags;
+  };
+  
+  const postTags = getPostTags();
+  
+  // Check if post should be shown based on filter tags
+  if (filterTags.length > 0 && !postTags.some(tag => filterTags.includes(tag))) {
+    return null;
+  }
 
   const handleDeletePost = async () => {
     if (!user || isDeleting) return;
@@ -59,8 +88,11 @@ const PostCard: React.FC<PostCardProps> = ({
 
   const isAuthor = user?.id === post.author_id;
   
+  // Count comments by checking length of comments array, used instead of post.comment_count
+  const commentCount = post.comments?.length || 0;
+  
   // Determine if post is popular (more than 5 likes or has comments)
-  const isPopular = (reaction?.likes > 5 || post.comment_count > 3);
+  const isPopular = (reaction?.likes > 5 || commentCount > 3);
   
   // Define card styling based on popularity
   const cardClasses = `overflow-hidden hover:shadow-lg transition-all duration-300 ${
@@ -102,6 +134,22 @@ const PostCard: React.FC<PostCardProps> = ({
             )}
           </div>
         </div>
+        
+        {/* Post tags */}
+        {postTags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-1">
+            {postTags.map((tag, index) => (
+              <Badge 
+                key={index} 
+                variant="outline" 
+                className="bg-collabCorner-purple/5 text-xs flex items-center gap-1"
+              >
+                <Tag className="h-3 w-3 text-collabCorner-purple" />
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         <p className="whitespace-pre-line">{post.content}</p>
@@ -121,7 +169,7 @@ const PostCard: React.FC<PostCardProps> = ({
             className="text-collabCorner-purple hover:text-collabCorner-purple/80 hover:bg-collabCorner-purple/10"
           >
             <MessageSquare className="h-4 w-4 mr-1" />
-            Comments
+            Comments {commentCount > 0 && `(${commentCount})`}
           </Button>
         </div>
       </CardFooter>
