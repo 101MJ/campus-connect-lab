@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
 import { useCommunityManager } from '@/hooks/useCommunityManager';
@@ -10,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { Clock } from 'lucide-react';
 import PostCard from '@/components/communities/PostCard';
 import { usePostReactions } from '@/hooks/usePostReactions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const DashboardPosts = () => {
   const { user } = useAuth();
@@ -42,7 +42,36 @@ const DashboardPosts = () => {
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="text-center py-4">Loading posts...</div>
+          <div className="space-y-4">
+            {Array(2).fill(0).map((_, i) => (
+              <div 
+                key={i}
+                className="p-4 border rounded-lg"
+                style={{ 
+                  opacity: 0,
+                  animation: 'fadeIn 0.5s ease-in-out forwards',
+                  animationDelay: `${i * 150}ms`
+                }}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <Skeleton className="h-8 w-8 rounded-full" animation="wave" />
+                  <div className="space-y-1.5 flex-1">
+                    <Skeleton className="h-4 w-2/3" animation="wave" />
+                    <Skeleton className="h-3 w-1/4" animation="wave" />
+                  </div>
+                </div>
+                <div className="space-y-2 mt-3">
+                  <Skeleton className="h-3 w-full" animation="wave" />
+                  <Skeleton className="h-3 w-full" animation="wave" />
+                  <Skeleton className="h-3 w-3/4" animation="wave" />
+                </div>
+                <div className="flex gap-3 mt-3">
+                  <Skeleton className="h-6 w-16" animation="wave" />
+                  <Skeleton className="h-6 w-24" animation="wave" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : sortedPosts.length > 0 ? (
           <div className="space-y-6">
             {sortedPosts.map(post => (
