@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { Send, Bold, Italic, List, Reply } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -24,7 +24,6 @@ const CommentForm: React.FC<CommentFormProps> = ({
   const { user } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
   const handleAddComment = async () => {
     if (!user) {
@@ -66,33 +65,11 @@ const CommentForm: React.FC<CommentFormProps> = ({
     }
   };
 
-  const insertFormatting = (prefix: string, suffix: string = '') => {
-    if (!textareaRef.current) return;
-    
-    const textarea = textareaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = newComment.substring(start, end);
-    const beforeText = newComment.substring(0, start);
-    const afterText = newComment.substring(end);
-    
-    const newValue = `${beforeText}${prefix}${selectedText}${suffix}${afterText}`;
-    setNewComment(newValue);
-    
-    // Focus back to textarea and set cursor position after the inserted formatting
-    setTimeout(() => {
-      textarea.focus();
-      const newPosition = start + prefix.length + selectedText.length + suffix.length;
-      textarea.setSelectionRange(newPosition, newPosition);
-    }, 0);
-  };
-
   return (
     <div className="p-4">
       {user && isMember ? (
         <div className="flex flex-col gap-2 animate-fade-in">
           <Textarea
-            ref={textareaRef}
             placeholder={replyToId ? "Write a reply..." : "Write a comment..."}
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
@@ -101,51 +78,7 @@ const CommentForm: React.FC<CommentFormProps> = ({
               replyToId && "border-l-2 border-l-collabCorner-purple pl-3"
             )}
           />
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1">
-              <Button 
-                type="button"
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => insertFormatting('**', '**')}
-                title="Bold"
-              >
-                <Bold className="h-4 w-4" />
-              </Button>
-              <Button 
-                type="button"
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => insertFormatting('*', '*')}
-                title="Italic"
-              >
-                <Italic className="h-4 w-4" />
-              </Button>
-              <Button 
-                type="button"
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => insertFormatting('- ')}
-                title="List"
-              >
-                <List className="h-4 w-4" />
-              </Button>
-              {!replyToId && (
-                <Button 
-                  type="button"
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8"
-                  onClick={() => insertFormatting('> ')}
-                  title="Quote"
-                >
-                  <Reply className="h-4 w-4 rotate-180" />
-                </Button>
-              )}
-            </div>
+          <div className="flex items-center justify-end">
             <Button 
               onClick={handleAddComment}
               disabled={isSubmitting || !newComment.trim()}
@@ -155,9 +88,6 @@ const CommentForm: React.FC<CommentFormProps> = ({
               <Send className="h-4 w-4 mr-1" />
               {replyToId ? 'Reply' : 'Comment'}
             </Button>
-          </div>
-          <div className="text-xs text-muted-foreground mt-1">
-            Supports markdown: **bold**, *italic*, - list, &gt; quote
           </div>
         </div>
       ) : (

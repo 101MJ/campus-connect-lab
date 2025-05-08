@@ -9,7 +9,6 @@ import CommunityDetail from '@/components/communities/CommunityDetail';
 import CommunitySidebar from '@/components/communities/CommunitySidebar';
 import CreateCommunityDialog from '@/components/communities/CreateCommunityDialog';
 import EmptyCommunityState from '@/components/communities/EmptyCommunityState';
-import PostTagsFilter from '@/components/communities/PostTagsFilter';
 import { useCommunityManager } from '@/hooks/useCommunityManager';
 import { useRecentPosts } from '@/hooks/useRecentPosts';
 import { motion } from '@/components/ui/motion';
@@ -21,7 +20,6 @@ const Communities = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCommunities, setFilteredCommunities] = useState<any[]>([]);
   const [animate, setAnimate] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   const { 
     communities,
@@ -69,10 +67,6 @@ const Communities = () => {
     }, 300);
   };
 
-  const handleFilterChange = (tags: string[]) => {
-    setSelectedTags(tags);
-  };
-
   if (selectedCommunity) {
     return (
       <DashboardLayout>
@@ -89,6 +83,17 @@ const Communities = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col md:flex-row gap-6">
+        {/* Sidebar - Now only appearing once */}
+        <CommunitySidebar 
+          myCommunities={myCommunities}
+          joinedCommunities={joinedCommunities}
+          recentPosts={sortedRecentPosts}
+          loading={isLoading}
+          onViewCommunity={handleViewCommunity}
+          onSearch={handleSearch}
+        />
+
+        {/* Main content */}
         <div className="flex-1 space-y-8">
           <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-collabCorner-purple to-collabCorner-purple-light bg-clip-text text-transparent">
@@ -97,21 +102,6 @@ const Communities = () => {
             <CreateCommunityDialog onCreateSuccess={createCommunity} />
           </div>
           
-          {/* Mobile sidebar integration (visible on small screens) */}
-          <CommunitySidebar 
-            myCommunities={myCommunities}
-            joinedCommunities={joinedCommunities}
-            recentPosts={sortedRecentPosts}
-            loading={isLoading}
-            onViewCommunity={handleViewCommunity}
-            onSearch={handleSearch}
-          />
-
-          {/* Post tags filter */}
-          {(joinedCommunities.length > 0 || filteredCommunities.length > 0) && (
-            <PostTagsFilter onFilterChange={handleFilterChange} />
-          )}
-
           {searchQuery && filteredCommunities.length > 0 && (
             <Card className="animate-fade-in">
               <CardContent className="p-6">
@@ -169,16 +159,6 @@ const Communities = () => {
             !searchQuery && <EmptyCommunityState onCreateClick={() => setDialogOpen(true)} />
           )}
         </div>
-
-        {/* Desktop sidebar (hidden on small screens) */}
-        <CommunitySidebar 
-          myCommunities={myCommunities}
-          joinedCommunities={joinedCommunities}
-          recentPosts={sortedRecentPosts}
-          loading={isLoading}
-          onViewCommunity={handleViewCommunity}
-          onSearch={handleSearch}
-        />
       </div>
     </DashboardLayout>
   );

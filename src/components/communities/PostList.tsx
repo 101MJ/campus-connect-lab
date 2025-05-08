@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { usePostList } from '@/hooks/usePostList';
 import PostCard from './PostCard';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter } from 'lucide-react';
-import PostTagsFilter from './PostTagsFilter';
 
 interface PostListProps {
   communityId: string;
@@ -13,18 +12,12 @@ interface PostListProps {
 
 const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
   const { posts, loading, reactions, setReactions, fetchPosts } = usePostList(communityId);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [showTagFilter, setShowTagFilter] = useState(false);
 
   const handleReactionUpdate = (postId: string, updatedReaction: any) => {
     setReactions(prev => ({
       ...prev,
       [postId]: updatedReaction
     }));
-  };
-
-  const handleFilterChange = (tags: string[]) => {
-    setSelectedTags(tags);
   };
 
   if (loading) {
@@ -86,57 +79,20 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gradient">Community Posts</h2>
-        <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={() => setShowTagFilter(!showTagFilter)}
-            className="flex items-center gap-1"
-          >
-            <Filter className="h-4 w-4" />
-            {selectedTags.length > 0 && (
-              <span className="bg-collabCorner-purple text-white rounded-full h-5 w-5 flex items-center justify-center text-xs font-medium">
-                {selectedTags.length}
-              </span>
-            )}
-          </Button>
-        </div>
       </div>
-
-      {showTagFilter && (
-        <div className="animate-fade-in">
-          <PostTagsFilter onFilterChange={handleFilterChange} />
-        </div>
-      )}
       
-      {posts.length > 0 ? (
-        <div className="space-y-6">
-          {posts.map((post) => (
-            <PostCard
-              key={post.post_id}
-              post={post}
-              reaction={reactions[post.post_id] || { likes: 0, dislikes: 0, userReaction: null }}
-              isMember={isMember}
-              onReactionUpdate={handleReactionUpdate}
-              onPostUpdated={fetchPosts}
-              filterTags={selectedTags}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">No posts match your selected filters</p>
-          {selectedTags.length > 0 && (
-            <Button 
-              variant="link" 
-              className="text-collabCorner-purple"
-              onClick={() => setSelectedTags([])}
-            >
-              Clear filters
-            </Button>
-          )}
-        </div>
-      )}
+      <div className="space-y-6">
+        {posts.map((post) => (
+          <PostCard
+            key={post.post_id}
+            post={post}
+            reaction={reactions[post.post_id] || { likes: 0, dislikes: 0, userReaction: null }}
+            isMember={isMember}
+            onReactionUpdate={handleReactionUpdate}
+            onPostUpdated={fetchPosts}
+          />
+        ))}
+      </div>
     </div>
   );
 };

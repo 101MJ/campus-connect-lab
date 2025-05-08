@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Input } from '@/components/ui/input';
-import { Clock, Search, Users, Menu, X, Filter, Tag } from 'lucide-react';
+import { Clock, Search, Users, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { RecentPost } from '@/hooks/useRecentPosts';
@@ -172,7 +172,7 @@ const CommunitySidebar = ({
 
   // Desktop sidebar version
   return (
-    <aside className="hidden md:block w-80 space-y-6 pl-6">
+    <aside className="hidden md:block w-80">
       <SidebarContent />
     </aside>
   );
