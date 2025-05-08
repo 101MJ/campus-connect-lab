@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, Info, Plus, Help } from 'lucide-react';
+import { Users, Info, Plus, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from '@/components/ui/motion';
 
@@ -36,7 +36,7 @@ const EmptyCommunityState: React.FC<EmptyCommunityStateProps> = ({ onCreateClick
           variant="outline" 
           className="border-collabCorner-purple/30 text-collabCorner-purple hover:bg-collabCorner-purple/5"
         >
-          <Help className="h-4 w-4 mr-2" />
+          <MessageCircle className="h-4 w-4 mr-2" />
           Browse Communities
         </Button>
       </div>

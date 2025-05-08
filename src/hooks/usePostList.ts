@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -13,6 +12,8 @@ export interface Post {
   author_id: string;
   profiles?: PostProfile | null;
   community_id: string;
+  tags?: string[];   // Added tags property
+  comments?: any[];  // Added comments property
 }
 
 interface PostProfile {

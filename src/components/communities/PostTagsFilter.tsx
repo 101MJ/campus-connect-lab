@@ -95,13 +95,15 @@ const PostTagsFilter: React.FC<PostTagsFilterProps> = ({ onFilterChange }) => {
           <PopoverContent className="w-60 p-3" align="start">
             <div className="space-y-2">
               <div>
-                <Input
-                  placeholder="Search tags..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="h-8 text-sm"
-                  prefix={<Search className="h-3.5 w-3.5 text-muted-foreground" />}
-                />
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Search tags..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="h-8 text-sm pl-8"
+                  />
+                </div>
               </div>
               <div className="max-h-40 overflow-y-auto space-y-1 py-1">
                 {filteredTags.length > 0 ? (
