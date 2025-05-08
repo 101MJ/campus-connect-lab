@@ -75,7 +75,6 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
             key={i} 
             className="mb-6 rounded-md border bg-card shadow-sm"
             style={{ 
-              animationDelay: `${i * 100}ms`, 
               opacity: 0,
               animation: 'fadeIn 0.5s ease-in-out forwards',
               animationDelay: `${i * 150}ms`
