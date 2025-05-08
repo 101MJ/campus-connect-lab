@@ -4,7 +4,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Card, CardContent } from '@/components/ui/card';
-import PostList from '@/components/communities/PostList';
 import CommunityDetail from '@/components/communities/CommunityDetail';
 import CommunitySidebar from '@/components/communities/CommunitySidebar';
 import CreateCommunityDialog from '@/components/communities/CreateCommunityDialog';
@@ -83,16 +82,6 @@ const Communities = () => {
   return (
     <DashboardLayout>
       <div className="flex flex-col md:flex-row gap-6">
-        {/* Sidebar - Now only appearing once */}
-        <CommunitySidebar 
-          myCommunities={myCommunities}
-          joinedCommunities={joinedCommunities}
-          recentPosts={sortedRecentPosts}
-          loading={isLoading}
-          onViewCommunity={handleViewCommunity}
-          onSearch={handleSearch}
-        />
-
         {/* Main content */}
         <div className="flex-1 space-y-8">
           <div className="flex justify-between items-center">
@@ -159,6 +148,16 @@ const Communities = () => {
             !searchQuery && <EmptyCommunityState onCreateClick={() => setDialogOpen(true)} />
           )}
         </div>
+
+        {/* Sidebar - Now only appearing once */}
+        <CommunitySidebar 
+          myCommunities={myCommunities}
+          joinedCommunities={joinedCommunities}
+          recentPosts={sortedRecentPosts}
+          loading={isLoading}
+          onViewCommunity={handleViewCommunity}
+          onSearch={handleSearch}
+        />
       </div>
     </DashboardLayout>
   );
