@@ -44,8 +44,8 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="bg-muted/50">
+      <Card className="animate-fade-in overflow-hidden hover:shadow-lg transition-all duration-300 border-collabCorner-purple/20">
+        <CardHeader className="bg-gradient-to-r from-white to-collabCorner-purple/5">
           <CommunityHeader
             community={community}
             memberCount={memberCount}
@@ -71,7 +71,7 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
           )}
           
           {showCreatePost && isMember && (
-            <div className="mb-8">
+            <div className="mb-8 animate-fade-in">
               <CreatePost 
                 communityId={communityId} 
                 onSuccess={() => {
@@ -83,7 +83,9 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
             </div>
           )}
           
-          <PostList communityId={communityId} isMember={isMember} />
+          <div className="animate-fade-in">
+            <PostList communityId={communityId} isMember={isMember} />
+          </div>
         </CardContent>
       </Card>
 

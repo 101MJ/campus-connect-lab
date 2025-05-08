@@ -72,9 +72,9 @@ const PostList: React.FC<PostListProps> = memo(({ communityId, isMember }) => {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-pulse-slow">
         {[1, 2, 3].map((i) => (
-          <Card key={i}>
+          <Card key={i} className="animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
             <CardContent className="p-6">
               <Skeleton className="h-6 w-3/4 mb-2" />
               <Skeleton className="h-4 w-1/2 mb-4" />
@@ -88,7 +88,7 @@ const PostList: React.FC<PostListProps> = memo(({ communityId, isMember }) => {
 
   if (posts.length === 0) {
     return (
-      <Card className="border border-dashed">
+      <Card className="border border-dashed animate-fade-in">
         <CardContent className="flex flex-col items-center justify-center py-8">
           <p className="text-muted-foreground mb-2">No posts in this community yet</p>
           {isMember && (
@@ -108,7 +108,12 @@ const PostList: React.FC<PostListProps> = memo(({ communityId, isMember }) => {
         const isLastPost = index === visiblePostsList.length - 1;
         
         return (
-          <div key={post.post_id} ref={isLastPost ? lastPostElementRef : null}>
+          <div 
+            key={post.post_id} 
+            ref={isLastPost ? lastPostElementRef : null}
+            className="animate-fade-in"
+            style={{ animationDelay: `${index * 75}ms` }}
+          >
             <PostCard
               post={post}
               reaction={reactions[post.post_id] || { likes: 0, dislikes: 0 }}
@@ -121,7 +126,7 @@ const PostList: React.FC<PostListProps> = memo(({ communityId, isMember }) => {
       })}
       
       {loading && (
-        <div className="flex justify-center py-4">
+        <div className="flex justify-center py-4 animate-fade-in">
           <Loader2 className="w-6 h-6 animate-spin text-collabCorner-purple" />
         </div>
       )}

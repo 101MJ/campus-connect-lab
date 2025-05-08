@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { MessageSquare, User, Trash2 } from 'lucide-react';
@@ -57,12 +58,22 @@ const PostCard: React.FC<PostCardProps> = ({
   };
 
   const isAuthor = user?.id === post.author_id;
+  
+  // Determine if post is popular (more than 5 likes or has comments)
+  const isPopular = (reaction?.likes > 5 || post.comment_count > 3);
+  
+  // Define card styling based on popularity
+  const cardClasses = `overflow-hidden hover:shadow-lg transition-all duration-300 ${
+    isPopular 
+      ? 'bg-gradient-to-br from-white to-collabCorner-purple/10 border-l-4 border-l-collabCorner-purple'
+      : 'bg-gradient-to-br from-white to-blue-50'
+  }`;
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-blue-50">
+    <Card className={cardClasses}>
       <CardHeader>
         <div className="flex items-center gap-3 mb-3">
-          <div className="p-2 bg-collabCorner-purple/10 rounded-full">
+          <div className={`p-2 rounded-full ${isPopular ? 'bg-collabCorner-purple/20' : 'bg-collabCorner-purple/10'}`}>
             <User className="h-5 w-5 text-collabCorner-purple" />
           </div>
           <div className="flex-1">
@@ -116,7 +127,7 @@ const PostCard: React.FC<PostCardProps> = ({
       </CardFooter>
       
       {isExpanded && (
-        <div className="border-t">
+        <div className="border-t animate-accordion-down">
           <PostComments 
             postId={post.post_id} 
             isMember={isMember}

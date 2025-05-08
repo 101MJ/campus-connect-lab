@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -17,6 +18,7 @@ const Communities = () => {
   const [selectedCommunity, setSelectedCommunity] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCommunities, setFilteredCommunities] = useState<any[]>([]);
+  const [animate, setAnimate] = useState(false);
 
   const { 
     communities,
@@ -48,20 +50,31 @@ const Communities = () => {
   };
 
   const handleViewCommunity = (communityId: string) => {
-    setSelectedCommunity(communityId);
+    setAnimate(true);
+    // Short delay to allow animation to start before navigating
+    setTimeout(() => {
+      setSelectedCommunity(communityId);
+      setAnimate(false);
+    }, 300);
   };
   
   const handleBackToCommunities = () => {
-    setSelectedCommunity(null);
+    setAnimate(true);
+    setTimeout(() => {
+      setSelectedCommunity(null);
+      setAnimate(false);
+    }, 300);
   };
 
   if (selectedCommunity) {
     return (
       <DashboardLayout>
-        <CommunityDetail 
-          communityId={selectedCommunity} 
-          onBack={handleBackToCommunities}
-        />
+        <div className={`${animate ? 'animate-fade-in' : ''}`}>
+          <CommunityDetail 
+            communityId={selectedCommunity} 
+            onBack={handleBackToCommunities}
+          />
+        </div>
       </DashboardLayout>
     );
   }
@@ -78,14 +91,14 @@ const Communities = () => {
           </div>
 
           {searchQuery && filteredCommunities.length > 0 && (
-            <Card>
+            <Card className="animate-fade-in">
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold mb-4">Search Results</h2>
                 <div className="space-y-4">
                   {filteredCommunities.map((community) => (
                     <div 
                       key={community.community_id} 
-                      className="p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer"
+                      className="p-4 border rounded-lg hover:shadow-md transition-all cursor-pointer hover:bg-gradient-to-r hover:from-white hover:to-collabCorner-purple/5"
                       onClick={() => handleViewCommunity(community.community_id)}
                     >
                       <h3 className="font-semibold">{community.name}</h3>
@@ -102,18 +115,19 @@ const Communities = () => {
           )}
 
           {!searchQuery && joinedCommunities.length > 0 ? (
-            <Card>
+            <Card className="animate-fade-in">
               <CardContent className="p-6">
                 <h2 className="text-xl font-semibold mb-4">Latest Posts from Your Communities</h2>
                 {joinedCommunities.length > 0 && (
                   <div className="space-y-6">
-                    {sortedRecentPosts.map(post => (
+                    {sortedRecentPosts.map((post, index) => (
                       <div 
                         key={post.post_id} 
-                        className="cursor-pointer"
+                        className={`cursor-pointer animate-fade-in transition-all duration-300`}
+                        style={{ animationDelay: `${index * 50}ms` }}
                         onClick={() => handleViewCommunity(post.community_id)}
                       >
-                        <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-blue-50">
+                        <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-collabCorner-blue/10 hover:to-collabCorner-purple/10">
                           <CardContent className="p-4">
                             <h3 className="font-semibold text-lg">{post.title}</h3>
                             <p className="text-sm text-muted-foreground mt-1">
