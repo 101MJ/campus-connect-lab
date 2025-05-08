@@ -11,9 +11,10 @@ import { useInView } from 'react-intersection-observer';
 interface PostListProps {
   communityId: string;
   isMember: boolean;
+  onCreatePostClick?: () => void;
 }
 
-const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
+const PostList: React.FC<PostListProps> = ({ communityId, isMember, onCreatePostClick }) => {
   const { posts, loading, reactions, setReactions, fetchPosts } = usePostList(communityId);
   const containerRef = useRef<HTMLDivElement>(null);
   const { ref: loadingRef, inView } = useInView({
@@ -119,7 +120,10 @@ const PostList: React.FC<PostListProps> = ({ communityId, isMember }) => {
             : "Join this community to start a conversation"}
         </p>
         {isMember && (
-          <Button className="bg-collabCorner-purple">
+          <Button 
+            className="bg-collabCorner-purple"
+            onClick={onCreatePostClick}
+          >
             <Plus className="h-4 w-4 mr-1" />
             Create Post
           </Button>

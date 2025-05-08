@@ -84,7 +84,11 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
           )}
           
           <div className="animate-fade-in">
-            <PostList communityId={communityId} isMember={isMember} />
+            <PostList 
+              communityId={communityId} 
+              isMember={isMember} 
+              onCreatePostClick={onToggleCreatePost}
+            />
           </div>
         </CardContent>
       </Card>
