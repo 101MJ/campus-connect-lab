@@ -66,6 +66,14 @@ const Communities = () => {
     }, 300);
   };
 
+  const handleCreateCommunityClick = () => {
+    // Find the create community dialog trigger and click it
+    const createButton = document.querySelector('[data-testid="create-community-trigger"]');
+    if (createButton instanceof HTMLElement) {
+      createButton.click();
+    }
+  };
+
   if (selectedCommunity) {
     return (
       <DashboardLayout>
@@ -145,11 +153,11 @@ const Communities = () => {
               </CardContent>
             </Card>
           ) : (
-            !searchQuery && <EmptyCommunityState onCreateClick={() => setDialogOpen(true)} />
+            !searchQuery && <EmptyCommunityState onCreateClick={handleCreateCommunityClick} />
           )}
         </div>
 
-        {/* Sidebar - Now only appearing once */}
+        {/* Sidebar */}
         <CommunitySidebar 
           myCommunities={myCommunities}
           joinedCommunities={joinedCommunities}

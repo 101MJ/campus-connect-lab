@@ -70,7 +70,10 @@ const CreateCommunityDialog: React.FC<CreateCommunityDialogProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-collabCorner-purple hover:bg-collabCorner-purple-dark transition-colors">
+        <Button 
+          className="bg-collabCorner-purple hover:bg-collabCorner-purple-dark transition-colors"
+          data-testid="create-community-trigger"
+        >
           <Plus className="mr-2 h-4 w-4" /> New Community
         </Button>
       </DialogTrigger>

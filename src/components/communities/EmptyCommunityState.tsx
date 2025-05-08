@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, Info, Plus, MessageCircle } from 'lucide-react';
+import { Users, Info, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from '@/components/ui/motion';
 
@@ -23,21 +23,13 @@ const EmptyCommunityState: React.FC<EmptyCommunityStateProps> = ({ onCreateClick
         Join a community to connect with others, share ideas, and collaborate on projects.
       </p>
       
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <div className="flex justify-center">
         <Button 
           className="bg-collabCorner-purple hover:bg-collabCorner-purple/90 flex items-center gap-2" 
           onClick={onCreateClick}
         >
           <Plus className="h-4 w-4" />
           Create New Community
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          className="border-collabCorner-purple/30 text-collabCorner-purple hover:bg-collabCorner-purple/5"
-        >
-          <MessageCircle className="h-4 w-4 mr-2" />
-          Browse Communities
         </Button>
       </div>
       
