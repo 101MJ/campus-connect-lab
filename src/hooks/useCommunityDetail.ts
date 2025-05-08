@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 
 export interface CommunityDetailData {
   community: any;
@@ -13,6 +14,7 @@ export interface CommunityDetailData {
 
 export const useCommunityDetail = (communityId: string) => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [data, setData] = useState<CommunityDetailData>({
     community: null,
     isMember: false,
@@ -89,6 +91,11 @@ export const useCommunityDetail = (communityId: string) => {
         isMember: true,
         memberCount: prev.memberCount + 1
       }));
+
+      // Invalidate related queries to refresh data across the app
+      queryClient.invalidateQueries({ queryKey: ['communities'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      
       toast.success('Successfully joined community');
     } catch (error: any) {
       console.error('Error joining community:', error);
@@ -113,6 +120,11 @@ export const useCommunityDetail = (communityId: string) => {
         isMember: false,
         memberCount: Math.max(0, prev.memberCount - 1)
       }));
+
+      // Invalidate related queries to refresh data across the app
+      queryClient.invalidateQueries({ queryKey: ['communities'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      
       toast.success('Successfully left community');
     } catch (error: any) {
       console.error('Error leaving community:', error);

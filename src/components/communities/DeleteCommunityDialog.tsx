@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface DeleteCommunityDialogProps {
   isOpen: boolean;
@@ -28,6 +29,8 @@ const DeleteCommunityDialog = ({
   communityName,
   onDeleteSuccess,
 }: DeleteCommunityDialogProps) => {
+  const queryClient = useQueryClient();
+  
   const handleDelete = async () => {
     try {
       const { error } = await supabase
@@ -36,6 +39,12 @@ const DeleteCommunityDialog = ({
         .eq('community_id', communityId);
 
       if (error) throw error;
+
+      // Invalidate related queries to refresh data across the app
+      queryClient.invalidateQueries({ queryKey: ['communities'] });
+      
+      // Explicitly invalidate dashboard queries
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
 
       toast.success('Community deleted successfully');
       onDeleteSuccess();
