@@ -16,7 +16,7 @@ interface CommunityContentProps {
   isCreator: boolean;
   isMember: boolean;
   showCreatePost: boolean;
-  showCreatePoll?: boolean;
+  showCreatePoll: boolean;
   showDeleteDialog: boolean;
   onBack: () => void;
   onDeleteClick: () => void;
@@ -24,7 +24,7 @@ interface CommunityContentProps {
   onJoin: () => void;
   onLeave: () => void;
   onToggleCreatePost: () => void;
-  onToggleCreatePoll?: () => void;
+  onToggleCreatePoll: () => void;
   communityId: string;
 }
 
@@ -34,7 +34,7 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
   isCreator,
   isMember,
   showCreatePost,
-  showCreatePoll = false,
+  showCreatePoll,
   showDeleteDialog,
   onBack,
   onDeleteClick,
@@ -89,7 +89,7 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
             </div>
           )}
 
-          {showCreatePoll && isMember && onToggleCreatePoll && (
+          {showCreatePoll && isMember && (
             <div className="mb-8 animate-fade-in">
               <CreatePoll 
                 communityId={communityId} 
