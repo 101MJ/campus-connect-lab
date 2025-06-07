@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import PostComments from './PostComments';
 import PostReaction from './PostReaction';
+import PollCard from './PollCard';
 import type { Post } from '@/hooks/usePostList';
 import type { PostReaction as PostReactionType } from '@/hooks/usePostReactions';
 import EditPostDialog from './EditPostDialog';
@@ -33,6 +34,18 @@ const PostCard: React.FC<PostCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
+  // Check if this is a poll post
+  const isPoll = (() => {
+    try {
+      const parsed = JSON.parse(post.content);
+      return parsed.type === 'poll';
+    } catch {
+      return false;
+    }
+  })();
+
+  const pollData = isPoll ? JSON.parse(post.content) : null;
+  
   // Count comments by checking length of comments array, used instead of post.comment_count
   const commentCount = post.comments?.length || 0;
   
@@ -43,6 +56,8 @@ const PostCard: React.FC<PostCardProps> = ({
   const cardClasses = `overflow-hidden hover:shadow-lg transition-all duration-300 ${
     isPopular 
       ? 'bg-gradient-to-br from-white to-collabCorner-purple/10 border-l-4 border-l-collabCorner-purple'
+      : isPoll
+      ? 'bg-gradient-to-br from-white to-blue-50/30 border-l-4 border-l-blue-400'
       : 'bg-gradient-to-br from-white to-blue-50'
   }`;
 
@@ -77,8 +92,8 @@ const PostCard: React.FC<PostCardProps> = ({
     <Card className={cardClasses}>
       <CardHeader>
         <div className="flex items-center gap-3 mb-3">
-          <div className={`p-2 rounded-full ${isPopular ? 'bg-collabCorner-purple/20' : 'bg-collabCorner-purple/10'}`}>
-            <User className="h-5 w-5 text-collabCorner-purple" />
+          <div className={`p-2 rounded-full ${isPopular ? 'bg-collabCorner-purple/20' : isPoll ? 'bg-blue-400/20' : 'bg-collabCorner-purple/10'}`}>
+            <User className={`h-5 w-5 ${isPoll ? 'text-blue-600' : 'text-collabCorner-purple'}`} />
           </div>
           <div className="flex-1">
             <CardTitle className="text-lg">{post.title}</CardTitle>
@@ -90,7 +105,7 @@ const PostCard: React.FC<PostCardProps> = ({
             <div className="text-sm text-muted-foreground">
               {format(new Date(post.created_at), 'MMM d, yyyy')}
             </div>
-            {isAuthor && (
+            {isAuthor && !isPoll && (
               <div className="flex items-center gap-1">
                 <EditPostDialog post={post} onPostUpdated={onPostUpdated} />
                 <Button
@@ -104,20 +119,41 @@ const PostCard: React.FC<PostCardProps> = ({
                 </Button>
               </div>
             )}
+            {isAuthor && isPoll && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                onClick={handleDeletePost}
+                disabled={isDeleting}
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <p className="whitespace-pre-line">{post.content}</p>
+        {isPoll ? (
+          <PollCard 
+            postId={post.post_id}
+            pollData={pollData}
+            authorName={post.profiles?.full_name ?? 'Unknown user'}
+          />
+        ) : (
+          <p className="whitespace-pre-line">{post.content}</p>
+        )}
       </CardContent>
       <CardFooter className="border-t bg-white py-3 flex justify-between">
         <div className="flex items-center gap-4">
-          <PostReaction
-            postId={post.post_id}
-            reaction={reaction}
-            isMember={isMember}
-            onReactionUpdate={onReactionUpdate}
-          />
+          {!isPoll && (
+            <PostReaction
+              postId={post.post_id}
+              reaction={reaction}
+              isMember={isMember}
+              onReactionUpdate={onReactionUpdate}
+            />
+          )}
           <Button 
             variant="ghost" 
             size="sm"

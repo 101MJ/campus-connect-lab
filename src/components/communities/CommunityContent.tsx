@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { toast } from 'sonner';
 import PostList from './PostList';
 import CreatePost from './CreatePost';
+import CreatePoll from './CreatePoll';
 import DeleteCommunityDialog from './DeleteCommunityDialog';
 import CommunityHeader from './CommunityHeader';
 import CommunityMembershipActions from './CommunityMembershipActions';
@@ -15,6 +16,7 @@ interface CommunityContentProps {
   isCreator: boolean;
   isMember: boolean;
   showCreatePost: boolean;
+  showCreatePoll?: boolean;
   showDeleteDialog: boolean;
   onBack: () => void;
   onDeleteClick: () => void;
@@ -22,6 +24,7 @@ interface CommunityContentProps {
   onJoin: () => void;
   onLeave: () => void;
   onToggleCreatePost: () => void;
+  onToggleCreatePoll?: () => void;
   communityId: string;
 }
 
@@ -31,6 +34,7 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
   isCreator,
   isMember,
   showCreatePost,
+  showCreatePoll = false,
   showDeleteDialog,
   onBack,
   onDeleteClick,
@@ -38,6 +42,7 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
   onJoin,
   onLeave,
   onToggleCreatePost,
+  onToggleCreatePoll,
   communityId,
 }) => {
   const { user } = useAuth();
@@ -61,6 +66,7 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
                 onJoin={onJoin}
                 onLeave={onLeave}
                 onToggleCreatePost={onToggleCreatePost}
+                onToggleCreatePoll={onToggleCreatePoll}
               />
             )}
           </div>
@@ -79,6 +85,19 @@ const CommunityContent: React.FC<CommunityContentProps> = ({
                   toast.success('Post created successfully');
                 }}
                 onCancel={onToggleCreatePost}
+              />
+            </div>
+          )}
+
+          {showCreatePoll && isMember && onToggleCreatePoll && (
+            <div className="mb-8 animate-fade-in">
+              <CreatePoll 
+                communityId={communityId} 
+                onSuccess={() => {
+                  onToggleCreatePoll();
+                  toast.success('Poll created successfully');
+                }}
+                onCancel={onToggleCreatePoll}
               />
             </div>
           )}
