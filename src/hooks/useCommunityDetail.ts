@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,7 +23,6 @@ export const useCommunityDetail = (communityId: string) => {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const [showCreatePoll, setShowCreatePoll] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const fetchCommunityDetails = async () => {
@@ -142,10 +142,8 @@ export const useCommunityDetail = (communityId: string) => {
     ...data,
     isLoading,
     showCreatePost,
-    showCreatePoll,
     showDeleteDialog,
     setShowCreatePost,
-    setShowCreatePoll,
     setShowDeleteDialog,
     handleJoinCommunity,
     handleLeaveCommunity
