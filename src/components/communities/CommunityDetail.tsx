@@ -18,8 +18,10 @@ const CommunityDetail = ({ communityId, onBack }: CommunityDetailProps) => {
     isCreator,
     isLoading,
     showCreatePost,
+    showCreatePoll,
     showDeleteDialog,
     setShowCreatePost,
+    setShowCreatePoll,
     setShowDeleteDialog,
     handleJoinCommunity,
     handleLeaveCommunity
@@ -40,6 +42,7 @@ const CommunityDetail = ({ communityId, onBack }: CommunityDetailProps) => {
       isCreator={isCreator}
       isMember={isMember}
       showCreatePost={showCreatePost}
+      showCreatePoll={showCreatePoll}
       showDeleteDialog={showDeleteDialog}
       onBack={onBack}
       onDeleteClick={() => setShowDeleteDialog(true)}
@@ -47,6 +50,7 @@ const CommunityDetail = ({ communityId, onBack }: CommunityDetailProps) => {
       onJoin={handleJoinCommunity}
       onLeave={handleLeaveCommunity}
       onToggleCreatePost={() => setShowCreatePost(!showCreatePost)}
+      onToggleCreatePoll={() => setShowCreatePoll(!showCreatePoll)}
       communityId={communityId}
     />
   );
