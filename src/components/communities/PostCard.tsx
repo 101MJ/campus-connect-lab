@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { MessageSquare, User, Trash2 } from 'lucide-react';
@@ -33,69 +34,17 @@ const PostCard: React.FC<PostCardProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   
-  // Enhanced poll detection with better error handling and logging
+  // Check if this is a poll post
   const isPoll = (() => {
     try {
-      // Add debug logging
-      console.log('PostCard - Checking if post is poll:', {
-        postId: post.post_id,
-        content: post.content,
-        contentType: typeof post.content
-      });
-
-      // Handle case where content might already be parsed
-      let parsedContent;
-      if (typeof post.content === 'string') {
-        parsedContent = JSON.parse(post.content);
-      } else if (typeof post.content === 'object' && post.content !== null) {
-        parsedContent = post.content;
-      } else {
-        console.log('PostCard - Content is not string or object:', post.content);
-        return false;
-      }
-
-      const result = parsedContent && parsedContent.type === 'poll';
-      console.log('PostCard - Poll detection result:', {
-        postId: post.post_id,
-        parsedContent,
-        isPoll: result
-      });
-
-      return result;
-    } catch (error) {
-      console.log('PostCard - Error parsing content as JSON:', {
-        postId: post.post_id,
-        content: post.content,
-        error: error.message
-      });
+      const parsed = JSON.parse(post.content);
+      return parsed.type === 'poll';
+    } catch {
       return false;
     }
   })();
 
-  // Enhanced poll data parsing with better error handling
-  const pollData = (() => {
-    if (!isPoll) return null;
-    
-    try {
-      let parsedContent;
-      if (typeof post.content === 'string') {
-        parsedContent = JSON.parse(post.content);
-      } else {
-        parsedContent = post.content;
-      }
-
-      // Ensure poll data has required structure
-      if (parsedContent && parsedContent.type === 'poll') {
-        console.log('PostCard - Poll data:', parsedContent);
-        return parsedContent;
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('PostCard - Error parsing poll data:', error);
-      return null;
-    }
-  })();
+  const pollData = isPoll ? JSON.parse(post.content) : null;
   
   // Count comments by checking length of comments array, used instead of post.comment_count
   const commentCount = post.comments?.length || 0;
@@ -185,7 +134,7 @@ const PostCard: React.FC<PostCardProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        {isPoll && pollData ? (
+        {isPoll ? (
           <PollCard 
             postId={post.post_id}
             pollData={pollData}
