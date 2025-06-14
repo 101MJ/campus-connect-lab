@@ -19,7 +19,12 @@ export const useProjectCollaboration = (projectId: string) => {
         .order('joined_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Cast the role to the correct type
+      return (data || []).map(collaborator => ({
+        ...collaborator,
+        role: collaborator.role as 'owner' | 'admin' | 'contributor' | 'viewer'
+      }));
     },
     enabled: !!projectId,
   });
@@ -34,7 +39,12 @@ export const useProjectCollaboration = (projectId: string) => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data || [];
+      
+      // Cast the status to the correct type
+      return (data || []).map(request => ({
+        ...request,
+        status: request.status as 'pending' | 'approved' | 'rejected'
+      }));
     },
     enabled: !!projectId,
   });

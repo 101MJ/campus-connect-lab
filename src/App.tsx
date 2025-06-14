@@ -15,12 +15,14 @@ import ProfileSettings from "./pages/ProfileSettings";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
+// Create QueryClient outside of component to prevent re-initialization
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
       retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 30000),
       staleTime: 5000,
+      refetchOnWindowFocus: false,
     },
   }
 });
