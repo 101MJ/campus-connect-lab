@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import TaskList from '@/components/tasks/TaskList';
 import ProjectProgress from './ProjectProgress';
+import ProjectShowcaseToggle from './ProjectShowcaseToggle';
 import { useAchievements } from '@/hooks/useAchievements';
 import {
   Dialog,
@@ -84,6 +85,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onT
     }
   };
 
+  const handleProjectUpdated = () => {
+    queryClient.invalidateQueries({
+      queryKey: ['projects'],
+      exact: false
+    });
+  };
+
   const projectAchievements = userAchievements.filter(
     ua => ua.achievement.type === 'project'
   );
@@ -118,6 +126,13 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onT
                   <Plus className="mr-2 h-4 w-4" /> Add Task
                 </Button>
               </div>
+            </div>
+
+            <div className="mt-4">
+              <ProjectShowcaseToggle 
+                project={project} 
+                onProjectUpdated={handleProjectUpdated}
+              />
             </div>
 
             <div className="mt-6">

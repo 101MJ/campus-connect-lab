@@ -36,6 +36,47 @@ export type Database = {
         }
         Relationships: []
       }
+      collaboration_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          project_id: string
+          requested_by: string
+          responded_at: string | null
+          responded_by: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          project_id: string
+          requested_by: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          project_id?: string
+          requested_by?: string
+          responded_at?: string | null
+          responded_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "collaboration_requests_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       comments: {
         Row: {
           author_id: string
@@ -211,42 +252,251 @@ export type Database = {
         }
         Relationships: []
       }
+      project_collaborators: {
+        Row: {
+          created_at: string
+          id: string
+          invited_by: string
+          joined_at: string
+          project_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          invited_by: string
+          joined_at?: string
+          project_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          invited_by?: string
+          joined_at?: string
+          project_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_collaborators_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      project_comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          parent_id: string | null
+          project_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          project_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          project_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "project_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_comments_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      project_media: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          mime_type: string
+          project_id: string
+          updated_at: string
+          uploaded_by: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id?: string
+          mime_type: string
+          project_id: string
+          updated_at?: string
+          uploaded_by: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          mime_type?: string
+          project_id?: string
+          updated_at?: string
+          uploaded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_media_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      project_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          reaction_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          reaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_reactions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
+      project_views: {
+        Row: {
+          id: string
+          project_id: string
+          user_agent: string | null
+          viewed_at: string
+          viewer_id: string | null
+          viewer_ip: unknown | null
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_id?: string | null
+          viewer_ip?: unknown | null
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_agent?: string | null
+          viewed_at?: string
+          viewer_id?: string | null
+          viewer_ip?: unknown | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_views_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["project_id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           completed_tasks: number | null
+          cover_image_url: string | null
           created_at: string | null
           created_by: string
           deadline: string | null
           description: string | null
+          is_public: boolean | null
           priority: string | null
           project_id: string
+          showcase_description: string | null
           status: string | null
+          tags: string[] | null
           title: string
           total_tasks: number | null
           updated_at: string | null
         }
         Insert: {
           completed_tasks?: number | null
+          cover_image_url?: string | null
           created_at?: string | null
           created_by: string
           deadline?: string | null
           description?: string | null
+          is_public?: boolean | null
           priority?: string | null
           project_id?: string
+          showcase_description?: string | null
           status?: string | null
+          tags?: string[] | null
           title: string
           total_tasks?: number | null
           updated_at?: string | null
         }
         Update: {
           completed_tasks?: number | null
+          cover_image_url?: string | null
           created_at?: string | null
           created_by?: string
           deadline?: string | null
           description?: string | null
+          is_public?: boolean | null
           priority?: string | null
           project_id?: string
+          showcase_description?: string | null
           status?: string | null
+          tags?: string[] | null
           title?: string
           total_tasks?: number | null
           updated_at?: string | null

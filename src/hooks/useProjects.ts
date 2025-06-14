@@ -43,7 +43,11 @@ export const useProjects = () => {
           priority: (project.priority as 'low' | 'medium' | 'high') || 'medium',
           status: (project.status as 'on_track' | 'at_risk' | 'delayed') || 'on_track',
           total_tasks: project.total_tasks || 0,
-          completed_tasks: project.completed_tasks || 0
+          completed_tasks: project.completed_tasks || 0,
+          is_public: project.is_public || false,
+          showcase_description: project.showcase_description || undefined,
+          tags: project.tags || [],
+          cover_image_url: project.cover_image_url || undefined,
         }));
       } catch (error: any) {
         console.error('Error fetching projects:', error);
@@ -75,6 +79,8 @@ export const useProjects = () => {
           deadline: values.deadline || null,
           priority: values.priority || 'medium',
           created_by: user.id,
+          is_public: false,
+          tags: [],
         })
         .select();
       
