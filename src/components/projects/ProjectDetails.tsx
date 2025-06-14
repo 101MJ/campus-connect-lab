@@ -4,9 +4,11 @@ import { format } from 'date-fns';
 import { Plus, Pencil, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import TaskList from '@/components/tasks/TaskList';
 import ProjectProgress from './ProjectProgress';
 import ProjectShowcaseToggle from './ProjectShowcaseToggle';
+import ProjectMediaTab from './ProjectMediaTab';
 import { useAchievements } from '@/hooks/useAchievements';
 import {
   Dialog,
@@ -177,29 +179,59 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project, onAddTask, onT
         </Card>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple">Pending Tasks</h2>
-          <div className="bg-white rounded-lg p-4">
-            <TaskList 
-              projectId={project.project_id} 
-              showCompleted={false} 
-              onTaskUpdated={handleTaskUpdated}
-            />
+      <Tabs defaultValue="tasks" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="tasks">Tasks</TabsTrigger>
+          <TabsTrigger value="media">Media & Files</TabsTrigger>
+          <TabsTrigger value="collaboration">Collaboration</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="tasks" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple">Pending Tasks</h2>
+              <div className="bg-white rounded-lg p-4">
+                <TaskList 
+                  projectId={project.project_id} 
+                  showCompleted={false} 
+                  onTaskUpdated={handleTaskUpdated}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple">Completed Tasks</h2>
+              <div className="bg-white rounded-lg p-4">
+                <TaskList 
+                  projectId={project.project_id} 
+                  showCompleted={true}
+                  onTaskUpdated={handleTaskUpdated} 
+                />
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div>
-          <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple">Completed Tasks</h2>
-          <div className="bg-white rounded-lg p-4">
-            <TaskList 
-              projectId={project.project_id} 
-              showCompleted={true}
-              onTaskUpdated={handleTaskUpdated} 
-            />
-          </div>
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="media">
+          <ProjectMediaTab project={project} />
+        </TabsContent>
+
+        <TabsContent value="collaboration">
+          <Card>
+            <CardHeader>
+              <CardTitle>Team Collaboration</CardTitle>
+              <CardDescription>
+                Manage project collaborators and collaboration requests
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-8 text-gray-500">
+                Collaboration features coming in Phase 3!
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-[525px]">
