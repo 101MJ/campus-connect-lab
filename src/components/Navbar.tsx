@@ -1,81 +1,110 @@
 
 import React from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { BookOpen, LogOut, User, LayoutDashboard } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/components/ui/use-toast';
+import { LogOut, User, FolderOpen, Users, Trophy } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 
 const Navbar = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSignOut = async (e) => {
-    e.preventDefault();
-    try {
-      await signOut();
-      // Navigation is handled in the AuthContext's signOut function
-      toast({
-        title: "Signed out successfully",
-        description: "You have been signed out of your account",
-      });
-    } catch (error) {
-      console.error("Sign out error:", error);
-      toast({
-        variant: "destructive",
-        title: "Sign out failed",
-        description: "There was a problem signing you out. Please try again.",
-      });
-    }
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
   };
 
   return (
-    <nav className="w-full py-4 px-6 md:px-12 flex justify-between items-center bg-white shadow-sm">
-      <div className="flex items-center gap-2">
-        <BookOpen className="w-8 h-8 text-collabCorner-purple" />
-        <span className="text-xl font-semibold">CollabCorner</span>
-      </div>
-      <div className="flex gap-4">
-        {user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span>{profile?.full_name || user.email}</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild className="cursor-pointer">
-                <Link to="/dashboard">
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  <span>Dashboard</span>
+    <nav className="bg-white shadow-sm border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <Link to="/" className="flex-shrink-0 flex items-center">
+              <span className="text-2xl font-bold text-blue-600">StudySync</span>
+            </Link>
+            
+            <div className="hidden md:ml-6 md:flex md:space-x-8">
+              <Link
+                to="/showcase"
+                className="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Showcase
+              </Link>
+              <Link
+                to="/communities"
+                className="text-gray-900 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
+              >
+                Communities
+              </Link>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span>Account</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/projects" className="flex items-center">
+                      <FolderOpen className="mr-2 h-4 w-4" />
+                      My Projects
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/communities" className="flex items-center">
+                      <Users className="mr-2 h-4 w-4" />
+                      Communities
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/showcase" className="flex items-center">
+                      <Trophy className="mr-2 h-4 w-4" />
+                      Showcase
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      Profile Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex items-center space-x-2">
+                <Link to="/signin">
+                  <Button variant="ghost">Sign In</Button>
                 </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleSignOut} className="text-red-600 cursor-pointer">
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <>
-            <Button variant="outline" asChild>
-              <Link to="/signin">Sign In</Link>
-            </Button>
-            <Button className="bg-collabCorner-purple hover:bg-collabCorner-purple-dark" asChild>
-              <Link to="/signup">Get Started</Link>
-            </Button>
-          </>
-        )}
+                <Link to="/signup">
+                  <Button>Get Started</Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </nav>
   );

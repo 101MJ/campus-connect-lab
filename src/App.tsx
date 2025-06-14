@@ -1,105 +1,46 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
-import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Communities from "./pages/Communities";
 import ProfileSettings from "./pages/ProfileSettings";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { Loader2 } from "lucide-react";
+import Showcase from "./pages/Showcase";
+import ShowcaseProjectDetail from "./pages/ShowcaseProjectDetail";
+import NotFound from "./pages/NotFound";
 
-// Create QueryClient outside of component to prevent re-initialization
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 2,
-      retryDelay: attempt => Math.min(attempt > 1 ? 2000 : 1000, 30000),
-      staleTime: 5000,
-      refetchOnWindowFocus: false,
-    },
-  }
-});
+const queryClient = new QueryClient();
 
-// Protected route component with improved loading state
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="h-12 w-12 animate-spin text-collabCorner-purple mb-4" />
-        <p className="text-lg font-medium text-gray-700">Verifying your account...</p>
-      </div>
-    );
-  }
-  
-  if (!user) {
-    console.log('Protected route accessed without authentication, redirecting to signin');
-    // We still want to remember the path for when they log in
-    localStorage.setItem('lastVisitedPath', window.location.pathname);
-    return <Navigate to="/signin" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Public route component (redirects to home if already authenticated)
-const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-collabCorner-purple mb-2" />
-        <p className="text-gray-700">Loading...</p>
-      </div>
-    );
-  }
-  
-  if (user) {
-    // Directly navigate to the main dashboard on login, not to "/"
-    return <Navigate to="/dashboard" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-const AppRoutes = () => (
-  <Routes>
-    <Route path="/" element={<Index />} />
-    <Route path="/signin" element={<PublicRoute><SignIn /></PublicRoute>} />
-    <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
-    
-    {/* Dashboard Routes - make the main Dashboard the primary route */}
-    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/dashboard/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-    <Route path="/dashboard/communities" element={<ProtectedRoute><Communities /></ProtectedRoute>} />
-    <Route path="/dashboard/settings" element={<ProtectedRoute><ProfileSettings /></ProtectedRoute>} />
-    
-    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-    <Route path="*" element={<NotFound />} />
-  </Routes>
-);
-
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
         <AuthProvider>
-          <AppRoutes />
+          <Toaster />
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/communities" element={<Communities />} />
+              <Route path="/profile" element={<ProfileSettings />} />
+              <Route path="/showcase" element={<Showcase />} />
+              <Route path="/showcase/:id" element={<ShowcaseProjectDetail />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
         </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;
