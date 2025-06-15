@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Project } from '@/types/project';
@@ -9,6 +9,8 @@ import ShowcaseNavbar from '@/components/showcase/ShowcaseNavbar';
 
 const Showcase = () => {
   const queryClient = useQueryClient();
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [sortBy, setSortBy] = useState('recent');
 
   const { data: publicProjects = [], isLoading } = useQuery({
     queryKey: ['public-projects'],
@@ -104,7 +106,12 @@ const Showcase = () => {
         ) : (
           <>
             <FeaturedProjects projects={publicProjects.slice(0, 3)} />
-            <ShowcaseProjectGrid projects={publicProjects} />
+            <ShowcaseProjectGrid 
+              projects={publicProjects} 
+              viewMode={viewMode}
+              sortBy={sortBy}
+              isLoading={isLoading}
+            />
           </>
         )}
       </main>

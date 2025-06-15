@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Project } from '@/types/project';
-import ProjectHeader from '@/components/projects/ProjectHeader';
+import ShowcaseProjectHeader from '@/components/showcase/ShowcaseProjectHeader';
 import ProjectDetails from '@/components/projects/ProjectDetails';
 import RelatedProjects from '@/components/showcase/RelatedProjects';
 import ShowcaseNavbar from '@/components/showcase/ShowcaseNavbar';
@@ -103,8 +103,8 @@ const ShowcaseProjectDetail = () => {
       
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
-          <ProjectHeader project={project} isPublicView={true} />
-          <ProjectDetails project={project} isPublicView={true} />
+          <ShowcaseProjectHeader project={project} />
+          <ProjectDetails project={project} />
           <RelatedProjects currentProjectId={project.project_id} tags={project.tags} />
         </div>
       </main>
