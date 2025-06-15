@@ -12,18 +12,22 @@ import TaskForm from '@/components/tasks/TaskForm';
 interface TaskFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedProject: string | null;
-  onSubmit: (values: any) => Promise<void>;
-  isSubmitting: boolean;
+  projectId?: string;
+  selectedProject?: string | null;
+  onSubmit?: (values: any) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
 const TaskFormDialog: React.FC<TaskFormDialogProps> = ({
   open,
   onOpenChange,
+  projectId,
   selectedProject,
   onSubmit,
   isSubmitting,
 }) => {
+  const actualProjectId = projectId || selectedProject;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[525px]">
@@ -34,9 +38,9 @@ const TaskFormDialog: React.FC<TaskFormDialogProps> = ({
           </DialogDescription>
         </DialogHeader>
         
-        {selectedProject && (
+        {actualProjectId && (
           <TaskForm 
-            projectId={selectedProject}
+            projectId={actualProjectId}
             onSubmit={onSubmit}
             isSubmitting={isSubmitting}
           />

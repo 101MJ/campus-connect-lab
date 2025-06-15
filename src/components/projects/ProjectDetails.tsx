@@ -35,9 +35,15 @@ import { useTaskManager } from '@/hooks/useTaskManager';
 
 interface ProjectDetailsProps {
   project: Project;
+  onAddTask?: () => void;
+  onTaskUpdated?: () => void;
 }
 
-const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
+const ProjectDetails: React.FC<ProjectDetailsProps> = ({ 
+  project, 
+  onAddTask, 
+  onTaskUpdated 
+}) => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const { deleteProject, fetchProjects } = useProjects();
@@ -82,6 +88,14 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
     fetchProjects();
   };
 
+  const handleAddTask = () => {
+    if (onAddTask) {
+      onAddTask();
+    } else {
+      setIsTaskDialogOpen(true);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Project Header Card */}
@@ -103,7 +117,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
             <div className="flex items-center gap-2">
               <ProjectShowcaseToggle 
                 project={project} 
-                onProjectUpdated={handleProjectUpdated}
+                onUpdate={handleProjectUpdated}
               />
               
               <DropdownMenu>
@@ -195,7 +209,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
         <TabsContent value="tasks" className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Project Tasks</h3>
-            <Button onClick={() => setIsTaskDialogOpen(true)}>
+            <Button onClick={handleAddTask}>
               <Plus className="h-4 w-4 mr-2" />
               Add Task
             </Button>
@@ -215,6 +229,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
                   tasks={pendingTasks} 
                   isLoading={tasksLoading}
                   emptyMessage="No pending tasks"
+                  onTaskUpdated={onTaskUpdated}
                 />
               </CardContent>
             </Card>
@@ -232,6 +247,7 @@ const ProjectDetails: React.FC<ProjectDetailsProps> = ({ project }) => {
                   tasks={completedTasks} 
                   isLoading={tasksLoading}
                   emptyMessage="No completed tasks"
+                  onTaskUpdated={onTaskUpdated}
                 />
               </CardContent>
             </Card>

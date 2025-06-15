@@ -8,13 +8,19 @@ import { useTaskManager } from '@/hooks/useTaskManager';
 import { Task } from '@/types/task';
 
 interface TaskListProps {
-  projectId: string | null;
+  tasks?: Task[];
+  isLoading?: boolean;
+  emptyMessage?: string;
+  projectId?: string | null;
   showCompleted?: boolean;
   onTaskUpdated?: () => void;
 }
 
 // Use memo for performance optimization
 const TaskList: React.FC<TaskListProps> = memo(({ 
+  tasks: propTasks,
+  isLoading: propIsLoading,
+  emptyMessage,
   projectId, 
   showCompleted = false, 
   onTaskUpdated 
@@ -24,13 +30,17 @@ const TaskList: React.FC<TaskListProps> = memo(({
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
-    tasks,
-    isLoading,
+    tasks: hookTasks,
+    isLoading: hookIsLoading,
     isDeletingTask,
     handleStatusChange,
     handleDelete,
     handleUpdateTask
   } = useTaskManager(projectId, showCompleted);
+
+  // Use prop data if provided, otherwise use hook data
+  const tasks = propTasks || hookTasks;
+  const isLoading = propIsLoading !== undefined ? propIsLoading : hookIsLoading;
 
   const handleEdit = (taskId: string) => {
     const taskToEdit = tasks.find(task => task.task_id === taskId);
@@ -61,7 +71,7 @@ const TaskList: React.FC<TaskListProps> = memo(({
   }
 
   if (!projectId || tasks.length === 0) {
-    return <EmptyTaskState projectSelected={!!projectId} showCompleted={showCompleted} />;
+    return <EmptyTaskState projectSelected={!!projectId} showCompleted={showCompleted} emptyMessage={emptyMessage} />;
   }
 
   return (
