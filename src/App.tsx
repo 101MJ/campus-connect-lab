@@ -37,7 +37,7 @@ function App() {
               <Route path="/dashboard/settings" element={<DashboardLayout><ProfileSettings /></DashboardLayout>} />
               <Route path="/dashboard/showcase" element={<DashboardLayout><Showcase /></DashboardLayout>} />
               
-              {/* Standalone routes */}
+              {/* Standalone routes - removed duplicate DashboardLayout wrapper */}
               <Route path="/projects" element={<Projects />} />
               <Route path="/communities" element={<Communities />} />
               <Route path="/profile" element={<ProfileSettings />} />

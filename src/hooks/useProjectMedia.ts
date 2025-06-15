@@ -27,8 +27,17 @@ export const useProjectMedia = (projectId: string) => {
   const uploadFile = async (file: File, fileType: 'image' | 'document' | 'video') => {
     setIsUploading(true);
     try {
+      // Check file size limit (100MB)
+      const maxSize = 100 * 1024 * 1024; // 100MB in bytes
+      if (file.size > maxSize) {
+        throw new Error('File size exceeds 100MB limit');
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
       const bucketName = `project-${fileType}s`;
-      const fileName = `${projectId}/${Date.now()}-${file.name}`;
+      const fileName = `${user.id}/${projectId}/${Date.now()}-${file.name}`;
       
       // Upload file to storage
       const { error: uploadError } = await supabase.storage
@@ -47,7 +56,7 @@ export const useProjectMedia = (projectId: string) => {
           file_type: fileType,
           file_size: file.size,
           mime_type: file.type,
-          uploaded_by: (await supabase.auth.getUser()).data.user?.id || '',
+          uploaded_by: user.id,
         });
       
       if (dbError) throw dbError;

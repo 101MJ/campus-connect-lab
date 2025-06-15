@@ -1,10 +1,12 @@
 
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileImage, FileText, Video, X } from 'lucide-react';
+import { Upload, FileImage, FileText, Video, X, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
+import { useProjectMedia } from '@/hooks/useProjectMedia';
 
 interface MediaUploadZoneProps {
   projectId: string;
@@ -26,6 +28,7 @@ const MediaUploadZone: React.FC<MediaUploadZoneProps> = ({
   maxFiles = 10
 }) => {
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+  const { uploadFile } = useProjectMedia(projectId);
 
   const getFileType = (file: File): 'image' | 'document' | 'video' | null => {
     if (file.type.startsWith('image/')) return 'image';
@@ -45,41 +48,45 @@ const MediaUploadZone: React.FC<MediaUploadZoneProps> = ({
       return 'File type not allowed';
     }
 
-    const maxSizes = {
-      image: 10 * 1024 * 1024, // 10MB
-      document: 50 * 1024 * 1024, // 50MB
-      video: 100 * 1024 * 1024 // 100MB
-    };
-
-    if (file.size > maxSizes[fileType]) {
-      return `File too large. Max size for ${fileType}s is ${maxSizes[fileType] / (1024 * 1024)}MB`;
+    // 100MB limit
+    const maxSize = 100 * 1024 * 1024;
+    if (file.size > maxSize) {
+      return `File too large. Max size is 100MB`;
     }
 
     return null;
   };
 
-  const uploadFile = async (file: File): Promise<void> => {
+  const handleUpload = async (file: File): Promise<void> => {
     const fileType = getFileType(file);
     if (!fileType) throw new Error('Invalid file type');
 
-    // Simulate upload progress
+    // Update progress to 30%
     setUploadingFiles(prev => prev.map(f => 
-      f.file === file ? { ...f, progress: 50 } : f
+      f.file === file ? { ...f, progress: 30 } : f
     ));
 
-    // Here you would implement actual file upload to Supabase Storage
-    // For now, we'll simulate the upload
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      const success = await uploadFile(file, fileType);
+      
+      if (success) {
+        setUploadingFiles(prev => prev.map(f => 
+          f.file === file ? { ...f, progress: 100 } : f
+        ));
 
-    setUploadingFiles(prev => prev.map(f => 
-      f.file === file ? { ...f, progress: 100 } : f
-    ));
-
-    // Remove from uploading list after completion
-    setTimeout(() => {
-      setUploadingFiles(prev => prev.filter(f => f.file !== file));
-      onUploadSuccess();
-    }, 1000);
+        // Remove from uploading list after completion
+        setTimeout(() => {
+          setUploadingFiles(prev => prev.filter(f => f.file !== file));
+          onUploadSuccess();
+        }, 1000);
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error: any) {
+      setUploadingFiles(prev => prev.map(f => 
+        f.file === file ? { ...f, error: error.message || 'Upload failed' } : f
+      ));
+    }
   };
 
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
@@ -107,13 +114,9 @@ const MediaUploadZone: React.FC<MediaUploadZoneProps> = ({
     // Upload files
     for (const file of validFiles) {
       try {
-        await uploadFile(file);
-        toast.success(`${file.name} uploaded successfully`);
+        await handleUpload(file);
       } catch (error) {
-        toast.error(`Failed to upload ${file.name}`);
-        setUploadingFiles(prev => prev.map(f => 
-          f.file === file ? { ...f, error: 'Upload failed' } : f
-        ));
+        console.error('Upload error:', error);
       }
     }
   }, [projectId, allowedTypes, onUploadSuccess]);
@@ -147,6 +150,13 @@ const MediaUploadZone: React.FC<MediaUploadZoneProps> = ({
 
   return (
     <div className="space-y-4">
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          Project media and files will be visible to everyone if this project is made public in the showcase.
+        </AlertDescription>
+      </Alert>
+
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
@@ -168,7 +178,7 @@ const MediaUploadZone: React.FC<MediaUploadZoneProps> = ({
               Drag & drop files here, or click to select
             </p>
             <p className="text-sm text-gray-500">
-              Supports: {allowedTypes.join(', ')} • Max {maxFiles} files
+              Supports: {allowedTypes.join(', ')} • Max {maxFiles} files • 100MB per file
             </p>
           </div>
         )}

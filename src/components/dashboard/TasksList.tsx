@@ -1,76 +1,163 @@
 
-import React from 'react';
-import { format } from 'date-fns';
-import { CheckCircle2, Circle, CalendarDays, Briefcase } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, Clock, AlertCircle, Filter } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Task {
   task_id: string;
   title: string;
-  deadline: string | null;
-  is_completed: boolean;
-  project: {
-    title: string;
-  };
+  description?: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+  due_date?: string;
+  project_title?: string;
 }
 
 interface TasksListProps {
-  tasks: Task[] | undefined;
+  tasks: Task[];
   loading: boolean;
 }
 
 const TasksList = ({ tasks, loading }: TasksListProps) => {
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return '';
-    try {
-      return format(new Date(dateString), 'MMM d');
-    } catch {
-      return '';
+  const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('pending');
+
+  const filteredTasks = tasks.filter(task => {
+    if (filter === 'all') return true;
+    return task.status === filter;
+  });
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+      case 'in_progress':
+        return <Clock className="h-4 w-4 text-blue-600" />;
+      default:
+        return <AlertCircle className="h-4 w-4 text-orange-600" />;
     }
   };
 
-  return (
-    <Card className="hover:shadow-lg transition-all duration-300 bg-gradient-to-br from-white to-blue-50">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-collabCorner-purple">Pending Tasks</CardTitle>
-        <CardDescription>Your upcoming tasks that need attention</CardDescription>
-      </CardHeader>
-      <CardContent className="pt-0">
-        {loading ? (
-          <div className="text-center py-4">Loading tasks...</div>
-        ) : tasks && tasks.length > 0 ? (
-          <div className="space-y-2">
-            {tasks.map((task) => (
-              <div 
-                key={task.task_id} 
-                className="relative flex items-start gap-3 p-2 bg-white rounded-lg hover:shadow-md transition-all duration-300 border border-transparent hover:border-collabCorner-purple/20"
-              >
-                <div className="mt-1">
-                  {task.is_completed ? (
-                    <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  ) : (
-                    <Circle className="h-5 w-5 text-collabCorner-purple" />
-                  )}
-                </div>
-                <div className="flex-1 space-y-0.5">
-                  <h3 className="font-medium pr-12">{task.title}</h3>
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <Briefcase className="h-3.5 w-3.5 mr-1" />
-                    <span>{task.project.title}</span>
-                  </div>
-                </div>
-                {task.deadline && (
-                  <div className="absolute top-2 right-2 bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded flex items-center">
-                    <CalendarDays className="h-3 w-3 mr-1" />
-                    {formatDate(task.deadline)}
-                  </div>
-                )}
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      default:
+        return 'bg-green-100 text-green-800';
+    }
+  };
+
+  const taskCounts = {
+    all: tasks.length,
+    pending: tasks.filter(t => t.status === 'pending').length,
+    in_progress: tasks.filter(t => t.status === 'in_progress').length,
+    completed: tasks.filter(t => t.status === 'completed').length,
+  };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5" />
+            Recent Tasks
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="animate-pulse">
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CheckCircle2 className="h-5 w-5" />
+          Recent Tasks
+        </CardTitle>
+        
+        {/* Filter Buttons */}
+        <div className="flex flex-wrap gap-2 mt-4">
+          {[
+            { key: 'pending', label: 'Pending', count: taskCounts.pending },
+            { key: 'in_progress', label: 'In Progress', count: taskCounts.in_progress },
+            { key: 'completed', label: 'Completed', count: taskCounts.completed },
+            { key: 'all', label: 'All', count: taskCounts.all },
+          ].map(({ key, label, count }) => (
+            <Button
+              key={key}
+              variant={filter === key ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilter(key as any)}
+              className="text-xs"
+            >
+              {label} ({count})
+            </Button>
+          ))}
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        {filteredTasks.length === 0 ? (
+          <div className="text-center py-6 text-gray-500">
+            <Filter className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <p>No {filter === 'all' ? '' : filter} tasks found</p>
+          </div>
         ) : (
-          <div className="text-center py-6 text-muted-foreground">
-            No tasks found
+          <div className="space-y-3">
+            {filteredTasks.slice(0, 10).map((task) => (
+              <div key={task.task_id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {getStatusIcon(task.status)}
+                      <h4 className="font-medium text-sm text-gray-900 truncate">
+                        {task.title}
+                      </h4>
+                    </div>
+                    
+                    {task.description && (
+                      <p className="text-xs text-gray-600 mb-2 line-clamp-2">
+                        {task.description}
+                      </p>
+                    )}
+                    
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      {task.project_title && (
+                        <span className="bg-gray-100 px-2 py-1 rounded">
+                          {task.project_title}
+                        </span>
+                      )}
+                      {task.due_date && (
+                        <span>
+                          Due: {new Date(task.due_date).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Badge 
+                    variant="secondary" 
+                    className={cn("text-xs", getPriorityColor(task.priority))}
+                  >
+                    {task.priority}
+                  </Badge>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </CardContent>

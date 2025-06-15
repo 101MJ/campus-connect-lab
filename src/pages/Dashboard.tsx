@@ -89,9 +89,26 @@ const Dashboard = () => {
     staleTime: 30000 // 30 seconds
   });
 
-  // Set up real-time subscriptions for communities
+  // Set up real-time subscriptions
   useEffect(() => {
     if (!user) return;
+    
+    // Projects real-time subscription
+    const projectsChannel = supabase
+      .channel('projects_dashboard_changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'projects',
+          filter: `created_by=eq.${user.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['dashboard', 'projects'] });
+        }
+      )
+      .subscribe();
     
     const communityMembersChannel = supabase
       .channel('community_members_changes')
@@ -129,6 +146,7 @@ const Dashboard = () => {
       .subscribe();
 
     return () => {
+      supabase.removeChannel(projectsChannel);
       supabase.removeChannel(communityMembersChannel);
       supabase.removeChannel(communitiesChannel);
     };
