@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useUserTasks } from '@/hooks/useUserTasks';
@@ -136,41 +135,39 @@ const Dashboard = () => {
   }, [user, queryClient]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Profile</h1>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-6">
-          <ProfileCard 
-            profile={profile}
-            projectsCount={projects.length}
-            communitiesCount={communities.length}
-          />
-          <AcademicsCard />
-        </div>
-
-        <Tabs defaultValue="projects" className="w-full">
-          <TabsList>
-            <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="communities">Communities</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="projects" className="mt-4">
-            <ProjectsTab projects={projects} loading={projectsLoading} />
-          </TabsContent>
-          
-          <TabsContent value="communities" className="mt-4">
-            <CommunitiesTab communities={communities} loading={communitiesLoading} />
-          </TabsContent>
-        </Tabs>
-
-        <TasksList tasks={tasks} loading={tasksLoading} />
-        
-        {communities.length > 0 && <DashboardPosts />}
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Profile</h1>
       </div>
-    </DashboardLayout>
+
+      <div className="grid md:grid-cols-3 gap-6">
+        <ProfileCard 
+          profile={profile}
+          projectsCount={projects.length}
+          communitiesCount={communities.length}
+        />
+        <AcademicsCard />
+      </div>
+
+      <Tabs defaultValue="projects" className="w-full">
+        <TabsList>
+          <TabsTrigger value="projects">Projects</TabsTrigger>
+          <TabsTrigger value="communities">Communities</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="projects" className="mt-4">
+          <ProjectsTab projects={projects} loading={projectsLoading} />
+        </TabsContent>
+        
+        <TabsContent value="communities" className="mt-4">
+          <CommunitiesTab communities={communities} loading={communitiesLoading} />
+        </TabsContent>
+      </Tabs>
+
+      <TasksList tasks={tasks} loading={tasksLoading} />
+      
+      {communities.length > 0 && <DashboardPosts />}
+    </div>
   );
 };
 

@@ -14,6 +14,7 @@ import ProfileSettings from "./pages/ProfileSettings";
 import Showcase from "./pages/Showcase";
 import ShowcaseProjectDetail from "./pages/ShowcaseProjectDetail";
 import NotFound from "./pages/NotFound";
+import DashboardLayout from "./components/dashboard/DashboardLayout";
 
 const queryClient = new QueryClient();
 
@@ -28,7 +29,15 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
-              <Route path="/dashboard" element={<Dashboard />} />
+              
+              {/* Dashboard routes - nested under DashboardLayout */}
+              <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+              <Route path="/dashboard/projects" element={<DashboardLayout><Projects /></DashboardLayout>} />
+              <Route path="/dashboard/communities" element={<DashboardLayout><Communities /></DashboardLayout>} />
+              <Route path="/dashboard/settings" element={<DashboardLayout><ProfileSettings /></DashboardLayout>} />
+              <Route path="/dashboard/showcase" element={<DashboardLayout><Showcase /></DashboardLayout>} />
+              
+              {/* Standalone routes */}
               <Route path="/projects" element={<Projects />} />
               <Route path="/communities" element={<Communities />} />
               <Route path="/profile" element={<ProfileSettings />} />

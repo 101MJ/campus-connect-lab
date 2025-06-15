@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BookOpen, Briefcase, Users, Settings, LogOut, UserRound } from 'lucide-react';
+import { BookOpen, Briefcase, Users, Settings, LogOut, UserRound, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,7 @@ const DashboardSidebar = () => {
     { name: 'Profile', icon: UserRound, path: '/dashboard' },
     { name: 'Projects', icon: Briefcase, path: '/dashboard/projects' },
     { name: 'Communities', icon: Users, path: '/dashboard/communities' },
+    { name: 'Showcase', icon: Trophy, path: '/dashboard/showcase' },
     { name: 'Settings', icon: Settings, path: '/dashboard/settings' }
   ];
 
