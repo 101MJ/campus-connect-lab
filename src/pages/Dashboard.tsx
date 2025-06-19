@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,12 +18,12 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { data: userTasks, isLoading: tasksLoading } = useUserTasks();
 
-  // Convert userTasks to the format expected by TasksList component with proper status mapping
+  // Convert userTasks to the format expected by TasksList component
   const tasks = userTasks?.map(task => ({
     task_id: task.task_id,
     title: task.title,
-    description: task.description || undefined,
-    status: task.is_completed ? 'completed' as const : 'pending' as const,
+    description: task.description,
+    status: 'pending' as const, // All tasks from useUserTasks are incomplete, so they're pending
     priority: 'medium' as const, // Default priority since it's not in userTasks
     due_date: task.deadline,
     project_title: task.project?.title,

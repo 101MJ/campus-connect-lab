@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect } from 'react';
-import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import ProjectList from '@/components/projects/ProjectList';
 import ProjectDetails from '@/components/projects/ProjectDetails';
 import EmptyProjectState from '@/components/projects/EmptyProjectState';
@@ -97,54 +96,52 @@ const Projects: React.FC = () => {
   }, [fetchProjects, queryClient]);
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        <ProjectHeader 
-          projectDialogOpen={projectDialogOpen}
-          setProjectDialogOpen={setProjectDialogOpen}
-          onSubmitProject={onSubmitProject}
-          isCreating={isCreating}
-        />
+    <div className="space-y-6">
+      <ProjectHeader 
+        projectDialogOpen={projectDialogOpen}
+        setProjectDialogOpen={setProjectDialogOpen}
+        onSubmitProject={onSubmitProject}
+        isCreating={isCreating}
+      />
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          <div className="lg:col-span-1">
-            <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple-dark">Your Projects</h2>
-            
-            <div className="sticky top-6">
-              <ProjectList
-                projects={projects}
-                selectedProject={selectedProject}
-                isLoading={isLoading}
-                onSelectProject={handleProjectClick}
-                onDeleteProject={deleteProject}
-              />
-            </div>
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-1">
+          <h2 className="text-lg font-semibold mb-4 text-collabCorner-purple-dark">Your Projects</h2>
           
-          <div className="lg:col-span-3 h-full">
-            {selectedProjectData ? (
-              <>
-                <ProjectDetails 
-                  project={selectedProjectData} 
-                  onAddTask={() => setTaskDialogOpen(true)}
-                  onTaskUpdated={handleTaskUpdated}
-                />
-                
-                <TaskFormDialog
-                  open={taskDialogOpen}
-                  onOpenChange={setTaskDialogOpen}
-                  selectedProject={selectedProject}
-                  onSubmit={onSubmitTask}
-                  isSubmitting={isSubmittingTask}
-                />
-              </>
-            ) : (
-              <EmptyProjectState />
-            )}
+          <div className="sticky top-6">
+            <ProjectList
+              projects={projects}
+              selectedProject={selectedProject}
+              isLoading={isLoading}
+              onSelectProject={handleProjectClick}
+              onDeleteProject={deleteProject}
+            />
           </div>
         </div>
+        
+        <div className="lg:col-span-3 h-full">
+          {selectedProjectData ? (
+            <>
+              <ProjectDetails 
+                project={selectedProjectData} 
+                onAddTask={() => setTaskDialogOpen(true)}
+                onTaskUpdated={handleTaskUpdated}
+              />
+              
+              <TaskFormDialog
+                open={taskDialogOpen}
+                onOpenChange={setTaskDialogOpen}
+                selectedProject={selectedProject}
+                onSubmit={onSubmitTask}
+                isSubmitting={isSubmittingTask}
+              />
+            </>
+          ) : (
+            <EmptyProjectState />
+          )}
+        </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

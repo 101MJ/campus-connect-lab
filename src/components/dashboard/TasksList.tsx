@@ -9,10 +9,10 @@ import { cn } from '@/lib/utils';
 interface Task {
   task_id: string;
   title: string;
-  description?: string;
+  description?: string | null;
   status: 'pending' | 'in_progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
-  due_date?: string;
+  due_date?: string | null;
   project_title?: string;
 }
 
@@ -114,7 +114,7 @@ const TasksList = ({ tasks, loading }: TasksListProps) => {
         {filteredTasks.length === 0 ? (
           <div className="text-center py-6 text-gray-500">
             <Filter className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>No {filter === 'all' ? '' : filter} tasks found</p>
+            <p>No {filter === 'all' ? '' : filter.replace('_', ' ')} tasks found</p>
           </div>
         ) : (
           <div className="space-y-3">
