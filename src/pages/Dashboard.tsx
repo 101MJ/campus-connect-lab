@@ -17,11 +17,11 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { data: userTasks, isLoading: tasksLoading } = useUserTasks();
 
-  // Convert userTasks to the format expected by TasksList component
+  // Convert userTasks to the format expected by TasksList component with proper status mapping
   const tasks = userTasks?.map(task => ({
     task_id: task.task_id,
     title: task.title,
-    description: undefined,
+    description: task.description || undefined,
     status: task.is_completed ? 'completed' as const : 'pending' as const,
     priority: 'medium' as const, // Default priority since it's not in userTasks
     due_date: task.deadline,

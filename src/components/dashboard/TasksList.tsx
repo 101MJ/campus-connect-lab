@@ -22,7 +22,7 @@ interface TasksListProps {
 }
 
 const TasksList = ({ tasks, loading }: TasksListProps) => {
-  const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('pending');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
 
   const filteredTasks = tasks.filter(task => {
     if (filter === 'all') return true;
@@ -92,10 +92,10 @@ const TasksList = ({ tasks, loading }: TasksListProps) => {
         {/* Filter Buttons */}
         <div className="flex flex-wrap gap-2 mt-4">
           {[
+            { key: 'all', label: 'All', count: taskCounts.all },
             { key: 'pending', label: 'Pending', count: taskCounts.pending },
             { key: 'in_progress', label: 'In Progress', count: taskCounts.in_progress },
             { key: 'completed', label: 'Completed', count: taskCounts.completed },
-            { key: 'all', label: 'All', count: taskCounts.all },
           ].map(({ key, label, count }) => (
             <Button
               key={key}
