@@ -21,26 +21,43 @@ export function useUserTasks() {
   return useQuery({
     queryKey: ['userTasks', user?.id],
     queryFn: async (): Promise<Task[]> => {
-      if (!user) throw new Error('User not authenticated');
+      console.log('useUserTasks - Fetching tasks for user:', user?.id);
+      
+      if (!user) {
+        console.log('useUserTasks - No user found, returning empty array');
+        return [];
+      }
 
-      const { data, error } = await supabase
-        .from('tasks')
-        .select(`
-          task_id,
-          title,
-          description,
-          deadline,
-          is_completed,
-          created_at,
-          project:projects!project_id(title)
-        `)
-        .eq('created_by', user.id)
-        .eq('is_completed', false)
-        .order('deadline', { ascending: true })
-        .limit(5);
+      try {
+        const { data, error } = await supabase
+          .from('tasks')
+          .select(`
+            task_id,
+            title,
+            description,
+            deadline,
+            is_completed,
+            created_at,
+            project:projects!project_id(title)
+          `)
+          .eq('created_by', user.id)
+          .order('deadline', { ascending: true })
+          .limit(10);
 
-      if (error) throw error;
-      return data || [];
+        if (error) {
+          console.error('useUserTasks - Error fetching tasks:', error);
+          throw error;
+        }
+        
+        console.log('useUserTasks - Fetched tasks:', data);
+        console.log('useUserTasks - Total tasks found:', data?.length || 0);
+        console.log('useUserTasks - Incomplete tasks:', data?.filter(t => !t.is_completed).length || 0);
+        
+        return data || [];
+      } catch (error) {
+        console.error('useUserTasks - Exception:', error);
+        throw error;
+      }
     },
     enabled: !!user,
     staleTime: 30000,

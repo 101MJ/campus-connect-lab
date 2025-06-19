@@ -15,22 +15,30 @@ import DashboardPosts from '@/components/dashboard/DashboardPosts';
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
-  const { data: userTasks, isLoading: tasksLoading } = useUserTasks();
+  const { data: userTasks, isLoading: tasksLoading, error: tasksError } = useUserTasks();
 
-  console.log('Raw userTasks from hook:', userTasks);
+  console.log('Dashboard - Current user:', user?.id);
+  console.log('Dashboard - Raw userTasks from hook:', userTasks);
+  console.log('Dashboard - Tasks loading:', tasksLoading);
+  console.log('Dashboard - Tasks error:', tasksError);
 
   // Convert userTasks to the format expected by TasksList component
-  const tasks = userTasks?.map(task => ({
-    task_id: task.task_id,
-    title: task.title,
-    description: task.description,
-    status: task.is_completed ? 'completed' as const : 'pending' as const,
-    priority: 'medium' as const, // Default priority since it's not in userTasks
-    due_date: task.deadline,
-    project_title: task.project?.title,
-  })) || [];
+  const tasks = userTasks?.map(task => {
+    console.log('Dashboard - Processing task:', task.title, 'is_completed:', task.is_completed);
+    return {
+      task_id: task.task_id,
+      title: task.title,
+      description: task.description,
+      status: task.is_completed ? 'completed' as const : 'pending' as const,
+      priority: 'medium' as const, // Default priority since it's not in userTasks
+      due_date: task.deadline,
+      project_title: task.project?.title,
+    };
+  }) || [];
 
-  console.log('Mapped tasks for TasksList:', tasks);
+  console.log('Dashboard - Mapped tasks for TasksList:', tasks);
+  console.log('Dashboard - Total tasks count:', tasks.length);
+  console.log('Dashboard - Pending tasks count:', tasks.filter(t => t.status === 'pending').length);
 
   // Use React Query for better caching and real-time updates
   const { 
