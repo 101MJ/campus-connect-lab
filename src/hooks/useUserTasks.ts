@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 interface Task {
   task_id: string;
   title: string;
+  description: string | null;
   deadline: string | null;
   is_completed: boolean;
   created_at: string;
@@ -27,6 +28,7 @@ export function useUserTasks() {
         .select(`
           task_id,
           title,
+          description,
           deadline,
           is_completed,
           created_at,
