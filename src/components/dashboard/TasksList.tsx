@@ -24,10 +24,15 @@ interface TasksListProps {
 const TasksList = ({ tasks, loading }: TasksListProps) => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'in_progress' | 'completed'>('all');
 
+  console.log('TasksList received tasks:', tasks);
+  console.log('Current filter:', filter);
+
   const filteredTasks = tasks.filter(task => {
     if (filter === 'all') return true;
     return task.status === filter;
   });
+
+  console.log('Filtered tasks:', filteredTasks);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -115,6 +120,9 @@ const TasksList = ({ tasks, loading }: TasksListProps) => {
           <div className="text-center py-6 text-gray-500">
             <Filter className="h-8 w-8 mx-auto mb-2 opacity-50" />
             <p>No {filter === 'all' ? '' : filter.replace('_', ' ')} tasks found</p>
+            {tasks.length > 0 && (
+              <p className="text-sm mt-2">Total tasks available: {tasks.length}</p>
+            )}
           </div>
         ) : (
           <div className="space-y-3">
