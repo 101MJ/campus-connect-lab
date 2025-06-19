@@ -17,16 +17,20 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { data: userTasks, isLoading: tasksLoading } = useUserTasks();
 
+  console.log('Raw userTasks from hook:', userTasks);
+
   // Convert userTasks to the format expected by TasksList component
   const tasks = userTasks?.map(task => ({
     task_id: task.task_id,
     title: task.title,
     description: task.description,
-    status: 'pending' as const, // All tasks from useUserTasks are incomplete, so they're pending
+    status: task.is_completed ? 'completed' as const : 'pending' as const,
     priority: 'medium' as const, // Default priority since it's not in userTasks
     due_date: task.deadline,
     project_title: task.project?.title,
   })) || [];
+
+  console.log('Mapped tasks for TasksList:', tasks);
 
   // Use React Query for better caching and real-time updates
   const { 

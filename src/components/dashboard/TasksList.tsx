@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +27,7 @@ const TasksList = ({ tasks, loading }: TasksListProps) => {
   console.log('Current filter:', filter);
 
   const filteredTasks = tasks.filter(task => {
+    console.log(`Task ${task.title} has status: ${task.status}, filter is: ${filter}`);
     if (filter === 'all') return true;
     return task.status === filter;
   });
@@ -62,6 +62,8 @@ const TasksList = ({ tasks, loading }: TasksListProps) => {
     in_progress: tasks.filter(t => t.status === 'in_progress').length,
     completed: tasks.filter(t => t.status === 'completed').length,
   };
+
+  console.log('Task counts:', taskCounts);
 
   if (loading) {
     return (
